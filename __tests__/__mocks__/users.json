@@ -1,0 +1,167 @@
+[
+    {
+        "id": "test-1",
+        "createdISO": "2023-08-30T17:20:20.765Z",
+        "firstname": "Test",
+        "lastname": "1",
+        "email": "test1@user.com",
+        "isOnline": false,
+        "createdById": null,
+        "lastModifiedISO": null,
+        "permissions": {
+            "canSee": {
+                "analytics": true,
+                "products": true,
+                "orders": true,
+                "pages": true,
+                "users": true
+            },
+            "canEdit": {
+                "analytics": true,
+                "products": true,
+                "orders": true,
+                "pages": true,
+                "users": true
+            },
+            "canDelete": {
+                "analytics": true,
+                "products": true,
+                "orders": true,
+                "pages": true,
+                "users": true
+            }
+        }
+    },
+    {
+        "id": "test-2",
+        "createdISO": "2023-08-31T14:10:10.432Z",
+        "firstname": "John",
+        "lastname": "Doe",
+        "email": "johndoe@example.com",
+        "isOnline": true,
+        "createdById": "test-1",
+        "lastModifiedISO": "2023-09-01T09:45:30.123Z",
+        "permissions": {
+            "canSee": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "users": false
+            },
+            "canEdit": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "users": false
+            },
+            "canDelete": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "users": false
+            }
+        }
+    },
+    {
+        "id": "test-3",
+        "createdISO": "2023-09-01T10:30:15.890Z",
+        "firstname": "Alice",
+        "lastname": "Smith",
+        "email": "alice.smith@example.com",
+        "isOnline": true,
+        "createdById": "test-1",
+        "lastModifiedISO": "2023-09-02T08:15:45.678Z",
+        "permissions": {
+            "canSee": {
+                "analytics": true,
+                "products": false,
+                "orders": true,
+                "pages": false,
+                "users": true
+            },
+            "canEdit": {
+                "analytics": true,
+                "products": false,
+                "orders": true,
+                "pages": false,
+                "users": true
+            },
+            "canDelete": {
+                "analytics": true,
+                "products": false,
+                "orders": true,
+                "pages": false,
+                "users": true
+            }
+        }
+    },
+    {
+        "id": "test-4",
+        "createdISO": "2023-09-02T15:45:30.123Z",
+        "firstname": "Eleanor",
+        "lastname": "Johnson",
+        "email": "eleanor.j@example.com",
+        "isOnline": false,
+        "createdById": "test-2",
+        "lastModifiedISO": "2023-09-02T17:30:45.890Z",
+        "permissions": {
+            "canSee": {
+                "analytics": false,
+                "products": true,
+                "orders": false,
+                "pages": true,
+                "users": false
+            },
+            "canEdit": {
+                "analytics": false,
+                "products": true,
+                "orders": false,
+                "pages": true,
+                "users": false
+            },
+            "canDelete": {
+                "analytics": false,
+                "products": true,
+                "orders": false,
+                "pages": true,
+                "users": false
+            }
+        }
+    },
+    {
+        "id": "test-5",
+        "createdISO": "2023-09-03T09:00:00.000Z",
+        "firstname": "Johan",
+        "lastname": "Brown",
+        "email": "david.b@example.com",
+        "isOnline": true,
+        "createdById": "test-2",
+        "lastModifiedISO": "2023-09-03T14:20:10.432Z",
+        "permissions": {
+            "canSee": {
+                "analytics": true,
+                "products": true,
+                "orders": false,
+                "pages": true,
+                "users": false
+            },
+            "canEdit": {
+                "analytics": true,
+                "products": true,
+                "orders": false,
+                "pages": true,
+                "users": false
+            },
+            "canDelete": {
+                "analytics": true,
+                "products": true,
+                "orders": false,
+                "pages": true,
+                "users": false
+            }
+        }
+    }
+]
