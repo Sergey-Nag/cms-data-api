@@ -41,7 +41,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci --legacy-peer-deps
-    - run: pm2 restart cms-data-api
+    - run: pm2 restart cms-data-api --update-env
       env:
         SERVER_ORIGIN: ${{ secrets.ADMIN_SERVER_ORIGIN }}
 
@@ -62,7 +62,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci --legacy-peer-deps
-    - run: pm2 restart cms-data-api-host
+    - run: pm2 restart cms-data-api-host --update-env
       env:
         NODE_ENV: production
         SECRET_ACCESS_TOKEN: ${{ secrets.SECRET_ACCESS_TOKEN }}

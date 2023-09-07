@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 4000;
 const isDev = process.env.NODE_ENV !== 'production';
 
 app.use(cors({
-  origin: process.env.SERVER_ORIGIN ?? 'http://localhost'
+  origin: process.env.SERVER_ORIGIN ?? 'http://localhost:3000'
 }));
 app.use(bodyParser.json());
 
