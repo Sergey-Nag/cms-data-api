@@ -122,7 +122,7 @@ describe('deleteUser mutation', () => {
 
         expect(response.body.data.deleteUser).toBeNull();
         expect(response.body.errors).toBeDefined();
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.userNotFound('not-existed-user-id').message);
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.userNotFound().message);
         
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });
@@ -142,7 +142,7 @@ describe('deleteUser mutation', () => {
 
         expect(response.body.data.deleteUser).toBeNull();
         expect(response.body.errors).toBeDefined();
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.userNotFound('not-existed-user-id').message);
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.userNotFound().message);
         
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });

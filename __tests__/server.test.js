@@ -8,7 +8,7 @@ jest.mock('../data/index.js', () => ({
     writeData: jest.fn((data) => data),
 }));
 
-describe.only('Server', () => {
+describe('Server', () => {
     afterEach(() => {
         jest.clearAllMocks();
     });

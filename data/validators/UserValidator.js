@@ -34,11 +34,12 @@ class UserValidator {
         }
     }
 
-    constructor(user, id) {
+    constructor(user, dest) {
         if (!user) {
-            throw ApiErrorFactory.userNotFound(id);
+            throw ApiErrorFactory.userNotFound();
         }
 
+        this.dest = dest;
         const { permissions } = user;
         this._canDelete = permissions?.canDelete ?? {};
         this._canSee = permissions?.canSee ?? {};

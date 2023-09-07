@@ -1,5 +1,6 @@
 const IRepository = require('./Repository');
 const User = require('../models/users/User');
+const ApiErrorFactory = require('../../utils/ApiErrorFactory');
 
 class UserRepository extends IRepository {
     constructor() {

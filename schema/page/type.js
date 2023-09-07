@@ -1,7 +1,6 @@
 const { GraphQLObjectType, GraphQLString, GraphQLList } = require('graphql');
 const {UserType} = require('../user/type');
-const { getUserResolve } = require('../user/resolvers');
-const UserRepository = require('../../data/repositories/UserRepository');
+const UsersResolver = require('../user/UsersResolver');
 
 const PageType = new GraphQLObjectType({
     name: 'Page',
@@ -13,14 +12,14 @@ const PageType = new GraphQLObjectType({
         createdISO: { type: GraphQLString },
         createdBy: {
             type: UserType,
-            resolve: async ({ createdById, actionUserId }, args) => {
-                return createdById && getUserResolve(undefined, { id: createdById, actionUserId });
+            resolve: async ({ createdById, actionUserId }, args, context) => {
+                return createdById && UsersResolver.get(null, { id: createdById, actionUserId }, context);
             }
         },
         modifiedBy: {
             type: UserType,
-            resolve: async ({ modifiedById, actionUserId }, args) => {
-                return modifiedById && getUserResolve(undefined, { id: modifiedById, actionUserId });
+            resolve: async ({ modifiedById, actionUserId }, args, context) => {
+                return modifiedById &&  UsersResolver.get(null, { id: modifiedById, actionUserId }, context);
             }
         },
         lastModifiedISO: { type: GraphQLString },

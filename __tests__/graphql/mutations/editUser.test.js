@@ -129,7 +129,7 @@ describe('editUser mutation', () => {
                 id: 'not-existed-user-id', 
                 actionUserId: mockUsers[0].id
             },
-            ApiErrorFactory.userNotFound('not-existed-user-id'),
+            ApiErrorFactory.userNotFound(),
         ],
         [
             'Should get Something went wrong error when id is empty', 
@@ -145,7 +145,7 @@ describe('editUser mutation', () => {
                 id: mockUsers[2].id, 
                 actionUserId: 'not-existed-user-id'
             },
-            ApiErrorFactory.userNotFound('not-existed-user-id'),
+            ApiErrorFactory.userNotFound(),
         ],
     ])('%s', async (_, variables, error) => {
         const updateData = {

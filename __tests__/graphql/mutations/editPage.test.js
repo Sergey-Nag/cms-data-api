@@ -180,7 +180,7 @@ describe('aditPage mutation', () => {
                 id: mockPages[0].id,
                 actionUserId: 'not-existed-page-id'
             },
-            ApiErrorFactory.userNotFound('not-existed-page-id'),
+            ApiErrorFactory.userNotFound(),
         ],
     ])('%s', async (_, variables, error) => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)

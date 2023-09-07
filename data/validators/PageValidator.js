@@ -43,16 +43,6 @@ class PageValidatior {
             throw ApiErrorFactory.pagePathIsNotValid();
         }
     }
-
-    constructor(page, id) {
-        if (!page) {
-            throw ApiErrorFactory.pageNotFound(id);
-        }
-    }
-
-    validateToEdit(data) {
-        PageValidatior.validateDataToEdit(data);
-    }
 }
 
 module.exports = PageValidatior;

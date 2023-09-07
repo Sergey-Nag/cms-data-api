@@ -6,10 +6,8 @@ module.exports = class ApiErrorFactory {
             id ? `Page with id "${id}" not found` : 'Page not found'
         );
     }
-    static userNotFound(id = null) {
-        return new Error(
-            id ? `User with id "${id}" not found` : 'User not found'
-        );
+    static userNotFound() {
+        return new Error('User not found');
     }
     static permissionsNotFound(username = null) {
         return new Error(`No permissions found${username ? ` for ${username}` : ''}`);
@@ -37,5 +35,23 @@ module.exports = class ApiErrorFactory {
     }
     static userEmailInvalid() {
         return new Error('Invalid email format!');
+    }
+    static userPasswordInvalid() {
+        return new Error('Pasword is to short!');
+    }
+    static tokenInvalid(message) {
+        return new Error(`Invalid token!${message ? ' '+message : ''}`);
+    }
+    static tokenExpired() {
+        return new Error('Token has expired!');
+    }
+    static userCredentialsInvalid() {
+        return new Error('Invalid email or password');
+    }
+    static authorizationTokenWasntProvided(){
+        return new Error('Authorization token has not been provided!');
+    }
+    static unauthorized(){
+        return new Error('Unauthorized!');
     }
 }

@@ -1,6 +1,6 @@
 const { GraphQLString, GraphQLNonNull, GraphQLList, GraphQLInputObjectType } = require('graphql');
-const { editPageResolve, addPageResolve, deletePageResolve } = require('./resolvers');
 const {PageType} = require('./type');
+const PagesResolver = require('./PagesResolver');
 
 const editFields = {
     path: { type: new GraphQLList(GraphQLString) },
@@ -30,7 +30,7 @@ module.exports = {
                 args: editFields
             }
         },
-        resolve: editPageResolve,
+        resolve: PagesResolver.edit,
     },
     addPage: {
         type: PageType,
@@ -44,7 +44,7 @@ module.exports = {
             },
             actionUserId: { type: GraphQLString },
         },
-        resolve: addPageResolve,
+        resolve: PagesResolver.add,
     },
     deletePage: {
         type: PageType,
@@ -52,6 +52,6 @@ module.exports = {
             id: { type: new GraphQLNonNull(GraphQLString) },
             actionUserId: { type: GraphQLString },
         },
-        resolve: deletePageResolve
+        resolve: PagesResolver.delete
     }
 }

@@ -1,6 +1,5 @@
 const { GraphQLObjectType, GraphQLString, GraphQLBoolean, GraphQLEnumType, GraphQLInputObjectType } = require('graphql');
-const UserRepository = require('../../data/repositories/UserRepository');
-const { getUserResolve } = require('./resolvers');
+const UsersResolver = require('./UsersResolver');
 
 const AdminPagesRights = new GraphQLObjectType({
     name: 'AdminPagesRights',
@@ -55,8 +54,8 @@ const UserType = new GraphQLObjectType({
         lastModifiedISO: { type: GraphQLString },
         createdBy: {
             type: UserType,
-            resolve: async ({createdById, actionUserId}, args) => {
-                return createdById && await getUserResolve(null, { id: createdById, actionUserId });
+            resolve: async ({createdById, actionUserId}, args, context) => {
+                return createdById && await UsersResolver.get(null, { id: createdById, actionUserId }, context);
             }
         }
     }),

@@ -131,7 +131,7 @@ describe('user query', () => {
 
         expect(response.body.data.user).toBeNull();
         expect(response.body.errors).toBeDefined();
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.userNotFound('test-id-that-shouldnt-exist').message);
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.userNotFound().message);
     });
 
     it('Should get error when user is not found without query data', async () => {

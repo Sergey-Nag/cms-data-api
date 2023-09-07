@@ -1,7 +1,6 @@
 const { GraphQLString, GraphQLNonNull,GraphQLList, GraphQLInputObjectType, GraphQLBoolean } = require('graphql');
 const { UserType, AdminPagesRights, UserPermissionsInput } = require('./type');
-const { addUserResolve, editUserResolve, deleteUserResolve } = require('./resolvers');
-const UserRepository = require('../../data/repositories/UserRepository');
+const UserResolver = require('./UsersResolver');
 
 const userEditFields = {
     firstname: { type: GraphQLString },
@@ -34,7 +33,7 @@ module.exports = {
             },
             actionUserId: { type: GraphQLString },
         },
-        resolve: addUserResolve,
+        resolve: UserResolver.add,
     },
     editUser: {
         type: UserType,
@@ -46,7 +45,7 @@ module.exports = {
                 args: userEditFields,
             },
         },
-        resolve: editUserResolve,
+        resolve: UserResolver.edit,
     },
     deleteUser: {
         type: UserType,
@@ -54,6 +53,6 @@ module.exports = {
             id: { type: new GraphQLNonNull(GraphQLString) },
             actionUserId: { type: GraphQLString },
         },
-        resolve: deleteUserResolve,
+        resolve: UserResolver.delete,
     }
 }
