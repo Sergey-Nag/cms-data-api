@@ -5,21 +5,30 @@ const bodyParser = require('body-parser');
 const schema = require('./schema');
 const swaggerConf = require('./swaggerConfig');
 const userRoutes = require('./restApi/userRoutes');
-const { authenticateNotExpiredTokenMiddleware, authenticateMiddleware } = require('./middlewares/authenticateMiddleware');
+const { authenticateNotExpiredTokenMiddleware } = require('./middlewares/authenticateMiddleware');
 const app = express();
 
+const isDev = process.env.NODE_ENV !== 'production';
 
 app.use(bodyParser.json());
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerConf));
+if (isDev) {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerConf));
+}
 app.use('/api', userRoutes);
 app.use('/graphql',
-authenticateNotExpiredTokenMiddleware,
+  authenticateNotExpiredTokenMiddleware,
   graphqlHTTP((req) => {
     return {
       schema,
-      graphiql: {
-        headerEditorEnabled: true,
-      },
+      ...(
+        isDev 
+        ? {
+          graphiql: {
+            headerEditorEnabled: true,
+          },
+        } 
+        : {}
+      ),
       context: { actionUserId: req.userId },
     }
   })

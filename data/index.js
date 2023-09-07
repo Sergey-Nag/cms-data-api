@@ -1,6 +1,8 @@
 const fs = require('fs/promises');
 const path = require('path');
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 const verifyFolder = async (filepath) => {
     try {
         await fs.access(filepath);
@@ -39,7 +41,11 @@ async function writeData(filename, data) {
 
         await fs.mkdir(path.dirname(filepath), { recursive: true });
 
-        await fs.writeFile(filepath, JSON.stringify(data, null, 4), 'utf-8');
+        await fs.writeFile(
+            filepath, 
+            JSON.stringify(data, ...(isDev ? [null, 4] : [])), 
+            'utf-8'
+        );
     } catch(e) {
         console.error('WRITE_FILE', e);
     }

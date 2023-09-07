@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,3 +23,23 @@ jobs:
 
     - name: Run tests
       run: npm run test
+
+  build:
+    runs-on: [self-hosted, cms-data-api]
+
+    strategy:
+      matrix:
+        node-version: [18.16.1]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci --legacy-peer-deps
+      env: 
+        REMOTE_APP: ${{ secrets.REMOTE_APP }}
+    - run: pm2 restart cms-data-api
