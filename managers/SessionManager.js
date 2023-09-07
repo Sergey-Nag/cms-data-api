@@ -4,8 +4,8 @@ const ApiErrorFactory = require('../utils/ApiErrorFactory');
 const SECRET_ACCESS_TOKEN = process.env.SECRET_ACCESS_TOKEN ?? 'secret-access-token';
 const SECRET_REFRESH_TOKEN = process.env.SECRET_REFRESH_TOKEN ?? 'secret-refresh-token';
 
-const SECRET_ACCESS_TIME = process.env.SECRET_ACCESS_TIME ?? '1m';
-const SECRET_REFRESH_TIME = process.env.SECRET_REFRESH_TIME ?? '2m';
+const SECRET_ACCESS_TIME = process.env.SECRET_ACCESS_TIME ?? '1h';
+const SECRET_REFRESH_TIME = process.env.SECRET_REFRESH_TIME ?? '2h';
 
 class SessionManager {
     static instance = null;
