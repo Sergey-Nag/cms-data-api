@@ -1,6 +1,7 @@
 const express = require('express');
 const { graphqlHTTP } = require('express-graphql');
 const swaggerUi = require('swagger-ui-express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const schema = require('./schema');
 const swaggerConf = require('./swaggerConfig');
@@ -8,12 +9,18 @@ const userRoutes = require('./restApi/userRoutes');
 const { authenticateNotExpiredTokenMiddleware } = require('./middlewares/authenticateMiddleware');
 const app = express();
 
+const PORT = process.env.PORT || 4000;
 const isDev = process.env.NODE_ENV !== 'production';
 
+app.use(cors({
+  origin: process.env.SERVER_ORIGIN ?? 'http://localhost'
+}));
 app.use(bodyParser.json());
+
 if (isDev) {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerConf));
 }
+
 app.use('/api', userRoutes);
 app.use('/graphql',
   authenticateNotExpiredTokenMiddleware,
@@ -34,7 +41,6 @@ app.use('/graphql',
   })
 );
 
-const PORT = process.env.PORT || 4000;
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(
