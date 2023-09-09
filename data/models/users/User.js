@@ -1,4 +1,4 @@
-const uniqId = require('uniqid');
+const CreatableModel = require('../baseModels/CreateableModel');
 
 const defaultPermissions = {
     analytics: false,
@@ -8,19 +8,17 @@ const defaultPermissions = {
     users: false,
 }
 
-class User {
-    #actionUserId = null;
-    constructor({ id, firstname, lastname, createdISO, lastModifiedISO, createdById, email, permissions, isOnline }, actionUserId) {
-        this.#actionUserId = actionUserId;
-
-        this.id = id ?? uniqId('U');
-        this.createdISO = createdISO ?? new Date().toISOString();
+class User extends CreatableModel {
+    constructor({ id, firstname, lastname, createdISO, lastModifiedISO, createdById, email, permissions }, createdByIdInitital = null) {
+        super({
+            id, 
+            createdById: createdByIdInitital ?? createdById, 
+            createdISO
+        }, 'U');
 
         this.firstname = firstname;
         this.lastname = lastname ?? null;
         this.email = email;
-        this.isOnline = isOnline ?? false;
-        this.createdById = id ? createdById ?? null : actionUserId ?? null;
         this.lastModifiedISO = lastModifiedISO ?? null;
 
         this.permissions = {
@@ -39,11 +37,10 @@ class User {
         }
     }
 
-    update({ firstname, lastname, email, isOnline, permissions }) {
+    update({ firstname, lastname, email, permissions }, modifiedById = null) {
         this.firstname = firstname ?? this.firstname;
         this.lastname = lastname ?? this.lastname;
         this.email = email ?? this.email;
-        this.isOnline = isOnline ?? this.isOnline;
         this.lastModifiedISO = new Date().toISOString();
 
         this.permissions = {

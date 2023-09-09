@@ -4,6 +4,11 @@ const server = require('../../../index');
 const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
+const SessionManager = require('../../../managers/SessionManager');
+const { mockSessionForUser } = require('../../utils');
+jest.mock('../../../managers/SessionManager');
+
+const ACCESS_TOKEN = 'access-users-token';
 
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockResolvedValue(mockUsers),
@@ -15,8 +20,24 @@ describe('users query', () => {
         jest.clearAllMocks();
     });
 
-    it('Should get list of users with all params', async () => {
+    it('Should get auth token not provided error if requests without Auth header', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .send({
+                query: `{
+                    users {
+                        id
+                    }
+                }`
+            });
+
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.authorizationTokenWasntProvided().message);
+        expect(response.body.data.users).toBeNull();
+    });
+
+    it('Should get list of users with all params', async () => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN)
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `{
                     users {
@@ -72,28 +93,14 @@ describe('users query', () => {
         expect(response.body.data.users[1].createdBy).toEqual({ id, firstname, lastname });
     });
 
-    it('Should get list of users when action user has access', async () => {
-        const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .send({
-                query: `
-                {
-                    users(actionUserId: "${mockUsers[0].id}") {
-                        id
-                    }
-                }
-                `
-            });
-
-        expect(response.body.data.users.length).toBe(5);
-        expect(response.body.data.users).toEqual(mockUsers.map(({ id })=> ({ id })));
-    });
-
     it('Should get Action forbidden error when action user has no access', async () => {
+        mockSessionForUser(mockUsers[1].id, ACCESS_TOKEN)
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                 {
-                    users(actionUserId: "${mockUsers[1].id}") {
+                    users {
                         id
                     }
                 }
@@ -106,7 +113,9 @@ describe('users query', () => {
     });
 
     it('Should get an empty array when users are not found', async () => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN)
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                 {
@@ -149,7 +158,9 @@ describe('users query', () => {
             [mockUsers[4]]
         ],
     ])('Filter should get %s', async (_, query, expectedUsers) => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN)
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                 {

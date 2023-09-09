@@ -1,9 +1,15 @@
 const bcrypt = require('bcrypt');
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 module.exports = class Credentials {
-    constructor(userId, password) {
-        this.id = userId;
-        this.hashedPassword = password;
+    constructor({id, password, hashedPassword, __TEST__password = null}) {
+        this.id = id;
+        this.hashedPassword = password ?? hashedPassword;
+
+        if (__TEST__password) {
+            this.__TEST__password = __TEST__password ?? password;
+        }
     }
 
     async hashPassword(rounds) {

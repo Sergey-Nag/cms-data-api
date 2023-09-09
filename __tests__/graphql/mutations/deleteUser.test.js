@@ -1,5 +1,6 @@
 const mockUsers = require('../../__mocks__/users.json');
 const mockPages = require('../../__mocks__/pages.json');
+const mockCredentials = require('../../__mocks__/user-credentials.json');
 const data = require('../../../data/index.js');
 const server = require('../../../index');
 const uniqid = require('uniqid');
@@ -7,7 +8,11 @@ const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const { expectUserData } = require('../utils');
-const { merge } = require('lodash');
+const { mockSessionForUser } = require('../../utils');
+const SessionManager = require('../../../managers/SessionManager');
+jest.mock('../../../managers/SessionManager');
+
+const ACCESS_TOKEN = 'test-access-token';
 
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
@@ -16,13 +21,19 @@ jest.mock('../../../data/index.js', () => ({
             return Promise.resolve(mockUsers);
         } else if (name === 'pages') {
             return Promise.resolve(mockPages);
+        } else if (name === 'user-credentials') {
+            return Promise.resolve(mockCredentials);
         }
     }),
     writeData: jest.fn(),
 }));
 
 describe('deleteUser mutation', () => {
-    const mockWriteDataFn = jest.fn();
+    const mockWriteDataFn = jest.fn((name, data) => {
+        if (name === 'user-credentials') {
+            console.log('{creds}', data);
+        }
+    });
     const MOCK_UNIQID = 'Pageuniqid';
     uniqid.mockReturnValue(MOCK_UNIQID);
     jest.spyOn(data, 'writeData').mockImplementation(mockWriteDataFn);
@@ -31,14 +42,33 @@ describe('deleteUser mutation', () => {
         jest.clearAllMocks();
     });
 
-    it('Should delete user by user that has access and return it', async () => {
+
+    it('Should get auth token not provided error if requests without Auth header', async () => {
         const deleteUser = {...mockUsers.at(-1)};
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `mutation {
                     deleteUser(
                         id: "${deleteUser.id}"
-                        actionUserId: "${mockUsers[0].id}"
+                    ) {
+                        id
+                    }
+                }`
+            });
+
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.authorizationTokenWasntProvided().message);
+        expect(response.body.data.deleteUser).toBeNull();
+    });
+
+    it('Should delete user and credentials by user that has access and return it', async () => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
+        const deleteUser = {...mockUsers.at(-1)};
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .send({
+                query: `mutation {
+                    deleteUser(
+                        id: "${deleteUser.id}"
                     ) {
                         id
                         firstname
@@ -83,16 +113,20 @@ describe('deleteUser mutation', () => {
         expectUserData(response.body.data.deleteUser, deleteUser);
         expect(mockUsers).not.toContainEqual(deleteUser);
         expect(mockWriteDataFn).toHaveBeenCalledWith('users', mockUsers);
+        expect(mockWriteDataFn).toHaveBeenCalledWith('user-credentials', expect.arrayContaining([
+            expect.not.objectContaining({ id: deleteUser.id })
+        ]));
     });
     
     it('Should get Action forbidden error when action user has no access', async () => {
+        mockSessionForUser(mockUsers[1].id, ACCESS_TOKEN);
         const notDeletedUser = {...mockUsers.at(-1)};
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `mutation {
                     deleteUser(
                         id: "${notDeletedUser.id}"
-                        actionUserId: "${mockUsers[1].id}"
                     ) {
                         id
                     }
@@ -108,12 +142,13 @@ describe('deleteUser mutation', () => {
     });
 
     it('Should get User not found error with wrong id', async () => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `mutation {
                     deleteUser(
                         id: "not-existed-user-id"
-                        actionUserId: "${mockUsers[0].id}"
                     ) {
                         id
                     }
@@ -128,12 +163,13 @@ describe('deleteUser mutation', () => {
     });
 
     it('Should get User not found error with wrong actionUserId', async () => {
+        mockSessionForUser('not-existed-user-id', ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `mutation {
                     deleteUser(
                         id: "${mockUsers[2].id}"
-                        actionUserId: "not-existed-user-id"
                     ) {
                         id
                     }

@@ -49,7 +49,10 @@ const UserType = new GraphQLObjectType({
         lastname: { type: GraphQLString },
         email: { type: GraphQLString },
         permissions: { type: UserPermissions },
-        isOnline: { type: GraphQLBoolean },
+        isOnline: { 
+            type: GraphQLBoolean,
+            resolve: UsersResolver.isOnline
+        },
         createdISO: { type: GraphQLString },
         lastModifiedISO: { type: GraphQLString },
         createdBy: {

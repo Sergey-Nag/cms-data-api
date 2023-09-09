@@ -1,6 +1,8 @@
 const Credentials = require("../models/users/Credentials");
 const Repository = require("./Repository");
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 class UserCredentialsRepository extends Repository {
     constructor() {
         super('user-credentials');
@@ -13,9 +15,8 @@ class UserCredentialsRepository extends Repository {
     //     return new Credentials(cred.id, cred.hashedPassword);
     // }
 
-    async add({id, firstname }, password) {
-        const credentials = new Credentials(id, password);
-        console.log(id, firstname, password);
+    async addAsync({id, firstname }, password) {
+        const credentials = new Credentials({id, password});
         await credentials.hashPassword(firstname?.length ?? Math.round(Math.random() * 100));
         return super.add(credentials);
     }
@@ -24,13 +25,13 @@ class UserCredentialsRepository extends Repository {
         const userCreds = this.get({id});
         if (!userCreds) return false;
 
-        const updatedCreds = new Credentials(id, hashedPassword);
+        const updatedCreds = new Credentials({id, hashedPassword});
         return super.edit(id, updatedCreds);
     }
 
     async load() {
         await super.load();
-        this.data = this.data.map(({id, hashedPassword }) => new Credentials(id, hashedPassword));
+        this.data = this.data.map((data) => new Credentials(data));
     }
 }
 

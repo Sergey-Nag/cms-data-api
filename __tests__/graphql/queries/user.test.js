@@ -4,7 +4,11 @@ const server = require('../../../index');
 const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
+const SessionManager = require('../../../managers/SessionManager');
+const { mockSessionForUser } = require('../../utils');
+jest.mock('../../../managers/SessionManager');
 
+const ACCESS_TOKEN = 'access-Token';
 
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockResolvedValue(mockUsers),
@@ -15,9 +19,28 @@ describe('user query', () => {
     beforeAll(() => {
         jest.clearAllMocks();
     });
-
-    it('Should get specific user by id with all params', async () => {
+    
+    
+    it('Should get auth token not provided error if requests without Auth header', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .send({
+                query: `query {
+                    user(
+                        id: "${mockUsers[2].id}"
+                    ) {
+                        id
+                    }
+                }`
+            });
+
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.authorizationTokenWasntProvided().message);
+        expect(response.body.data.user).toBeNull();
+    });
+
+    it('Should get user itself by id with all params and isOnline true when session is active while has access', async () => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `{
                     user(id: "${mockUsers[0].id}") {
@@ -66,40 +89,19 @@ describe('user query', () => {
         const { createdById, ...userData} = mockUsers[0];
         expect(response.body.data.user).toEqual({
             ...userData,
+            isOnline: true,
             createdBy: null
-        });
-    });
-
-    it('Should get specific user by id when action user has access', async () => {
-        const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .send({
-                query: `
-                    {
-                        user(id: "${mockUsers[1].id}" actionUserId: "${mockUsers[0].id}") {
-                            id
-                            createdBy {
-                                id
-                            }
-                        }
-                    }
-                `
-            });
-
-        expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.user).toEqual({
-            id: mockUsers[1].id,
-            createdBy: {
-                id: mockUsers[0].id
-            }
         });
     });
     
     it('Should get Action forbidden error when action user has no access', async () => {
+        mockSessionForUser(mockUsers[1].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                     {
-                        user(id: "${mockUsers[0].id}" actionUserId: "${mockUsers[1].id}") {
+                        user(id: "${mockUsers[0].id}") {
                             id
                             createdBy {
                                 id
@@ -115,7 +117,9 @@ describe('user query', () => {
     });
 
     it('Should get error when user is not found', async () => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                     {
@@ -135,7 +139,9 @@ describe('user query', () => {
     });
 
     it('Should get error when user is not found without query data', async () => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                     {
@@ -180,7 +186,9 @@ describe('user query', () => {
             mockUsers[4]
         ],
     ])('Should get user %s', async (_, query, expectedUser) => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                 {

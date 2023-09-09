@@ -15,8 +15,8 @@ class PageRepository extends IRepository {
         const page = this.get({id});
         if (!page) return false;
 
-        const updatedPage = new Page(page, actionUserId);
-        updatedPage.update(data);
+        const updatedPage = new Page(page);
+        updatedPage.update(data, actionUserId);
         return super.edit(id, updatedPage);
     }
 

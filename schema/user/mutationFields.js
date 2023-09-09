@@ -2,17 +2,16 @@ const { GraphQLString, GraphQLNonNull,GraphQLList, GraphQLInputObjectType, Graph
 const { UserType, AdminPagesRights, UserPermissionsInput } = require('./type');
 const UserResolver = require('./UsersResolver');
 
-const userEditFields = {
+const userEditableFields = {
     firstname: { type: GraphQLString },
     lastname: { type: GraphQLString },
     email: { type: GraphQLString },
-    isOnline: { type: GraphQLBoolean },
     permissions: { type: UserPermissionsInput },
 }
 
 const EditUserInput = new GraphQLInputObjectType({
     name: 'EditUserInput',
-    fields: userEditFields,
+    fields: userEditableFields,
 });
 
 /** @type {import('graphql/type/definition').GraphQLFieldConfigMap} */
@@ -31,7 +30,6 @@ module.exports = {
                     canDelete: { type: AdminPagesRights },
                 },
             },
-            actionUserId: { type: GraphQLString },
         },
         resolve: UserResolver.add,
     },
@@ -39,10 +37,9 @@ module.exports = {
         type: UserType,
         args: {
             id: { type: GraphQLNonNull(GraphQLString) },
-            actionUserId: { type: GraphQLString },
             data: {
                 type: GraphQLNonNull(EditUserInput),
-                args: userEditFields,
+                args: userEditableFields,
             },
         },
         resolve: UserResolver.edit,
@@ -51,7 +48,6 @@ module.exports = {
         type: UserType,
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) },
-            actionUserId: { type: GraphQLString },
         },
         resolve: UserResolver.delete,
     }

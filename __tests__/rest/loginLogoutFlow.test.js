@@ -27,7 +27,7 @@ describe('REST /login and /logout flow', () => {
     it('Should login and logout successfully', async () => {
         const userCredentials = {
             email: mockUsers[0].email,
-            password: mockCredentials[0].__TEST__pasword
+            password: mockCredentials[0].__TEST__password
         }
 
         const loginResponse = await supertest(server).post(`${REST_ENDPOINT}/login`)
@@ -49,7 +49,7 @@ describe('REST /login and /logout flow', () => {
     it('Should not logout with refreshToken', async () => {
         const userCredentials = {
             email: mockUsers[0].email,
-            password: mockCredentials[0].__TEST__pasword
+            password: mockCredentials[0].__TEST__password
         }
 
         const loginResponse = await supertest(server).post(`${REST_ENDPOINT}/login`)

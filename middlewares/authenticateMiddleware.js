@@ -1,6 +1,9 @@
 const SessionManager = require("../managers/SessionManager");
 const ApiErrorFactory = require("../utils/ApiErrorFactory");
 
+/**
+ * If token exists or doesn't or invalid should NOT return an error.
+ */
 function authenticateMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
 
@@ -22,6 +25,9 @@ function authenticateMiddleware(req, res, next) {
     next();
 };
 
+/**
+ * If token exists and it's expired should return 401 an error.
+ */
 function authenticateNotExpiredTokenMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
 
@@ -30,20 +36,28 @@ function authenticateNotExpiredTokenMiddleware(req, res, next) {
 
         try {
             const usersSession = new SessionManager();
-
             const decodedUserData = usersSession.verifyAccessToken(token);
-            if (usersSession.isTokenExpired(decodedUserData)) {
-                return res.status(401).json({ error: ApiErrorFactory.tokenExpired().message })
+
+            if (!usersSession.getSession(decodedUserData.userId)) {
+                throw ApiErrorFactory.tokenObsolete();
             }
+
+            if (usersSession.isTokenExpired(decodedUserData)) {
+                throw ApiErrorFactory.tokenExpired();
+            }
+
             req.userId = decodedUserData?.userId ?? null;
         } catch (error) {
             // Token verification failed
             console.log(error);
-            req.userId = null;
+            return res.status(401).json({ errors: [{message: error.message}] })
         }
     }
     next();
 }
+/**
+ * If token doesn't exist should return 401 an error.
+ */
 function authenticateRequiredMiddleware(req, res, next) {
     if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
         return res.status(401).json({ error: ApiErrorFactory.authorizationTokenWasntProvided().message });

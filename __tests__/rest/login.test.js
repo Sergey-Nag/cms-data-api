@@ -35,7 +35,7 @@ describe('REST /login', () => {
         jest.spyOn(SessionManager.prototype, 'createSession').mockImplementation(mockFn);
         const userCredentials = {
             email: mockUsers[0].email,
-            password: mockCredentials[0].__TEST__pasword
+            password: mockCredentials[0].__TEST__password
         }
 
         const response = await supertest(server).post(loginEndpoint)
@@ -81,7 +81,7 @@ describe('REST /login', () => {
         ],
         [
             'Invalid credentials if user exists but password from another user',
-            { email: mockUsers[1].email, password: mockCredentials[0].__TEST__pasword },
+            { email: mockUsers[1].email, password: mockCredentials[0].__TEST__password },
             ApiErrorFactory.userCredentialsInvalid(),
         ],
     ])('Should get error: %s ', async (_name, data, error) => {

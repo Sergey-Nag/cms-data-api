@@ -1,10 +1,22 @@
 const server = require('../index.js');
 const supertest = require('supertest');
+const mockUsers = require('./__mocks__/users.json');
+const mockPages = require('./__mocks__/pages.json');
 const data = require('../data/index.js');
 const { GRAPH_ENDPOINT } = require('./constants.js');
+const SessionManager = require('../managers/SessionManager.js');
+const { mockSessionForUser, mockReadData } = require('./utils.js');
+jest.mock('../managers/SessionManager');
+const ACCESS_TOKEN = 'access-token';
 
 jest.mock('../data/index.js', () => ({
-    readData: jest.fn().mockResolvedValue([{id: 'test-id', firstname: 'Test', lastname: 'Test lastname'}]),
+    readData: jest.fn().mockImplementation((name) => {
+        if (name === 'users') {
+            return Promise.resolve(mockUsers);
+        } else if (name === 'pages') {
+            return Promise.resolve(mockPages);
+        }
+    }),
     writeData: jest.fn((data) => data),
 }));
 
@@ -24,9 +36,8 @@ describe('Server', () => {
                         }
                     }
                 `
-            });
+            }).expect(200);
 
-        expect(response.statusCode).toBe(200);
         expect(response.body?.data?.users).toBeDefined();
     });
 
@@ -34,10 +45,10 @@ describe('Server', () => {
         'pages',
         'users',
     ])('Should read %p json data when requests API', async (name) => {
-        const mockReadData = jest.fn().mockResolvedValue([])
-        jest.spyOn(data, 'readData').mockImplementation(mockReadData)
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
 
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                     {
@@ -51,6 +62,6 @@ describe('Server', () => {
         expect(response.body.errors).toBeUndefined();
         expect(response.body.data[name]).toBeDefined();
 
-        expect(mockReadData).toHaveBeenCalledWith(name);
+        expect(data.readData).toHaveBeenCalledWith(name);
     });
 });

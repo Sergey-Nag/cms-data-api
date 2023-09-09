@@ -4,6 +4,7 @@ const SessionManager = require('../managers/SessionManager');
 const {authenticateRequiredMiddleware, authenticateMiddleware} = require('../middlewares/authenticateMiddleware');
 const ApiErrorFactory = require('../utils/ApiErrorFactory');
 const ApiSuccessFactory = require('../utils/ApiSuccessFactory');
+const { UserRepository, UserCredentialsRepository } = require('../data/repositories');
 const router = express.Router();
 
 
@@ -105,5 +106,55 @@ router.post('/logout', [authenticateRequiredMiddleware, authenticateMiddleware],
         res.status(401).json({ error: error.message });
     }
 });
+
+if (process.env.NODE_ENV !== 'production') {
+    
+/**
+ * @swagger
+ * /quick-login-first-user:
+ *   post:
+ *     summary: TEST Authenticate a first user and return its data with tokens
+ *     tags:
+ *       - Authentication
+ *     consumes:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: Returns user and tokens
+ *       401:
+ *         description: Unauthorized
+ *         schema:
+ *           type: object
+ *           properties:
+ *             error:
+ *               type: string
+ *         example:
+ *           error: Authentication failed
+ */
+    router.post('/quick-login-first-user', async (req, res) => {
+        try {
+            const usersRepo = new UserRepository();
+            const usersCred = new UserCredentialsRepository();
+            await usersRepo.load();
+            await usersCred.load();
+
+            const { email, id } = usersRepo.data[0];
+            const {__TEST__password} = usersCred.get({ id });
+
+            const user = await UserAuthenticationService.authenticateUser(
+                email,
+                __TEST__password
+            );
+            
+            const sessions = new SessionManager();
+            const tokens = sessions.createSession(user.id);
+
+            res.status(200).json({user, tokens});
+        } catch (error) {
+            res.status(401).json({ error: error.message });
+        }
+    });
+} 
+
 
 module.exports = router;

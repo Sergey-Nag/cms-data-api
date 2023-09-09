@@ -15,7 +15,7 @@ class UserRegistrationService {
         }
 
         const password = this.generatePassword();
-        const userCreds = await credsRepo.add(user, password);
+        const userCreds = await credsRepo.addAsync(user, password);
 
         if (!userCreds || !(await userCreds.isPasswordValidAsync(password))) {
             throw ApiErrorFactory.somethingWentWrong();

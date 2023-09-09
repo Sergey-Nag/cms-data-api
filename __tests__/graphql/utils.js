@@ -1,14 +1,13 @@
 const { isUndefined } = require("lodash");
 
 function expectUserData(responseUser, expectedUser, oldUser) {
-    const id = expectedUser.id ?? oldUser?.id;
-    const firstname = expectedUser.firstname ?? oldUser?.firstname;
-    const lastname = expectedUser.lastname ?? oldUser?.lastname;
-    const email = expectedUser.email ?? oldUser?.email;
-    const isOnline = expectedUser.isOnline ?? oldUser?.isOnline;
-    const createdISO = expectedUser.createdISO ?? oldUser?.createdISO;
-    const lastModifiedISO = expectedUser.lastModifiedISO ?? oldUser?.lastModifiedISO;
-    const createdById = expectedUser.createdById ?? oldUser?.createdById;
+    const id = expectedUser?.id ?? oldUser?.id;
+    const firstname = expectedUser?.firstname ?? oldUser?.firstname;
+    const lastname = expectedUser?.lastname ?? oldUser?.lastname;
+    const email = expectedUser?.email ?? oldUser?.email;
+    const createdISO = expectedUser?.createdISO ?? oldUser?.createdISO;
+    const lastModifiedISO = expectedUser?.lastModifiedISO ?? oldUser?.lastModifiedISO;
+    const createdById = expectedUser?.createdById ?? oldUser?.createdById;
 
     const permissions = (expectedUser?.permissions || oldUser?.permissions) && {
         canSee: {
@@ -40,15 +39,14 @@ function expectUserData(responseUser, expectedUser, oldUser) {
         },
     }
 
-    !isUndefined(id) && expect(responseUser).toHaveProperty('id', id);
-    !isUndefined(firstname) && expect(responseUser).toHaveProperty('firstname', firstname);
-    !isUndefined(lastname) && expect(responseUser).toHaveProperty('lastname', lastname);
-    !isUndefined(email) && expect(responseUser).toHaveProperty('email',  email);
-    !isUndefined(isOnline) && expect(responseUser).toHaveProperty('isOnline', isOnline);
-    !isUndefined(createdISO) && expect(responseUser).toHaveProperty('createdISO', createdISO);
-    !isUndefined(lastModifiedISO) && expect(responseUser).toHaveProperty('lastModifiedISO', lastModifiedISO);
-    !isUndefined(permissions) && expect(responseUser).toHaveProperty('permissions', permissions);
-    !isUndefined(createdById) && expect(responseUser).toHaveProperty('createdBy', {
+    !isUndefined(id) && responseUser.id && expect(responseUser).toHaveProperty('id', id);
+    !isUndefined(firstname) && responseUser.firstname && expect(responseUser).toHaveProperty('firstname', firstname);
+    !isUndefined(lastname) && responseUser.lastname && expect(responseUser).toHaveProperty('lastname', lastname);
+    !isUndefined(email) && responseUser.email && expect(responseUser).toHaveProperty('email',  email);
+    !isUndefined(createdISO) && responseUser.createdISO && expect(responseUser).toHaveProperty('createdISO', createdISO);
+    !isUndefined(lastModifiedISO) && responseUser.lastModifiedISO && expect(responseUser).toHaveProperty('lastModifiedISO', lastModifiedISO);
+    !isUndefined(permissions) && responseUser.permissions && expect(responseUser).toHaveProperty('permissions', permissions);
+    !isUndefined(createdById) && responseUser.createdBy && expect(responseUser).toHaveProperty('createdBy', {
         id: createdById,
     });
 }

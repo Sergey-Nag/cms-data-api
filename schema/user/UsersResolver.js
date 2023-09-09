@@ -1,9 +1,11 @@
 const UserValidator = require('../../data/validators/UserValidator');
-const { UserRepository } = require('../../data/repositories');
+const { UserRepository, UserCredentialsRepository } = require('../../data/repositories');
 const ApiErrorFactory = require('../../utils/ApiErrorFactory');
+const UserRegistrationService = require('../../services/UserRegistrationService');
+const SessionManager = require('../../managers/SessionManager');
 
 class UserResolver {
-    static async get(parent, { actionUserId, ...data }) {
+    static async get(parent, data,  { actionUserId }) {
         const users = new UserRepository();
         await users.load();
 
@@ -11,33 +13,35 @@ class UserResolver {
             new UserValidator(users.get({ id: actionUserId }))
                 .canSee('users');
         }
-
         const user = users.get(data);
         new UserValidator(user);
-
         return user;
     }
 
-    static async add(parent, { actionUserId, ...data }) {
+    static async add(parent, data, {actionUserId}) {
+        if (!actionUserId) {
+            throw ApiErrorFactory.authorizationTokenWasntProvided();
+        }
         const users = new UserRepository();
         await users.load();
 
-        if (actionUserId) {
-            new UserValidator(users.get({ id: actionUserId }))
-                .canEdit('users');
-        }
+        new UserValidator(users.get({ id: actionUserId }))
+            .canEdit('users');
 
         UserValidator.validateDataToCreate(data);
 
         const addedUser = users.add(data, actionUserId);
+        
+        const passw = await UserRegistrationService.createPasswordForUser(addedUser);
+        console.log(passw);
         await users.save();
         return addedUser;
     }
 
-    static async getAll(parent = null, { actionUserId, ...queryData } = {}, context) {
+    static async getAll(parent = null, queryData = {}, { actionUserId }) {
         const users = new UserRepository();
         await users.load();
-        
+
         if (actionUserId) {
             new UserValidator(users.get({ id: actionUserId }))
                 .canSee('users');
@@ -46,15 +50,16 @@ class UserResolver {
         return users.getAll(queryData);
     }
 
-    static async edit(parent, { id, actionUserId, data }) {
+    static async edit(parent, { id, data }, { actionUserId }) {
+        if (!actionUserId) {
+            throw ApiErrorFactory.authorizationTokenWasntProvided();
+        }
         const users = new UserRepository();
         await users.load();
 
-        if (actionUserId) {
-            const actionUser = users.get({ id: actionUserId });
-            new UserValidator(actionUser, actionUserId)
-                .canEdit('users');
-        }
+        const actionUser = users.get({ id: actionUserId });
+        new UserValidator(actionUser, actionUserId)
+            .canEdit('users');
 
         UserValidator.validateDataToEdit(data);
 
@@ -68,15 +73,16 @@ class UserResolver {
         return updatedUser;
     }
 
-    static async delete(parent, { id, actionUserId }) {
+    static async delete(parent, { id }, {actionUserId}) {
+        if (!actionUserId) {
+            throw ApiErrorFactory.authorizationTokenWasntProvided();
+        }
         const users = new UserRepository();
         await users.load();
 
-        if (actionUserId) {
-            const actionUser = users.get({ id: actionUserId });
-            new UserValidator(actionUser, actionUserId)
-                .canDelete('users');
-        }
+        const actionUser = users.get({ id: actionUserId });
+        new UserValidator(actionUser, actionUserId)
+            .canDelete('users');
 
         new UserValidator(users.get({ id }), id);
         const deletedUsers = users.delete(id);
@@ -85,8 +91,25 @@ class UserResolver {
             throw ApiErrorFactory.somethingWentWrong();
         }
 
+        const creds = new UserCredentialsRepository();
+        await creds.load();
+        creds.delete(deletedUsers[0].id);
+
         await users.save();
+        await creds.save();
         return deletedUsers[0];
+    }
+
+    static isOnline({id}) {
+        const sesisonManager = new SessionManager()
+        const session = sesisonManager.getSession(id);
+    
+        console.log(session);
+        if (!session) return false;
+
+        const decodedAccessToken = sesisonManager.verifyAccessToken(session.accessToken);
+
+        return !sesisonManager.isTokenExpired(decodedAccessToken);
     }
 }
 

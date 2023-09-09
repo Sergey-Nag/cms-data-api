@@ -51,6 +51,9 @@ module.exports = class ApiErrorFactory {
     static authorizationTokenWasntProvided(){
         return new Error('Authorization token has not been provided!');
     }
+    static tokenObsolete(){
+        return new Error('Authorization token is obsolete!');
+    }
     static unauthorized(){
         return new Error('Unauthorized!');
     }
