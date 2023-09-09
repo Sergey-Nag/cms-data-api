@@ -7,7 +7,6 @@ const ApiErrorFactory = require('../utils/ApiErrorFactory');
 
 const mockSessionForUser = (userId, accessToken = 'test-token') => {
     jest.spyOn(SessionManager.prototype, 'verifyAccessToken').mockImplementation((token) => {
-        userId === 'test-id' && console.log('{token}',token, accessToken);
         if (token === accessToken) {
             return { userId };
         }

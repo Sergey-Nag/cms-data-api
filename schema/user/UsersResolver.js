@@ -5,60 +5,49 @@ const UserRegistrationService = require('../../services/UserRegistrationService'
 const SessionManager = require('../../managers/SessionManager');
 
 class UserResolver {
-    static async get(parent, data,  { actionUserId }) {
+    static async get(parent, data,  { actionUser }) {
         const users = new UserRepository();
         await users.load();
 
-        if (actionUserId) {
-            new UserValidator(users.get({ id: actionUserId }))
-                .canSee('users');
-        }
+        new UserValidator(actionUser)
+            .canSee('users');
+
         const user = users.get(data);
         new UserValidator(user);
         return user;
     }
 
-    static async add(parent, data, {actionUserId}) {
-        if (!actionUserId) {
-            throw ApiErrorFactory.authorizationTokenWasntProvided();
-        }
+    static async add(parent, data, {actionUser}) {
         const users = new UserRepository();
         await users.load();
 
-        new UserValidator(users.get({ id: actionUserId }))
+        new UserValidator(actionUser)
             .canEdit('users');
 
         UserValidator.validateDataToCreate(data);
 
-        const addedUser = users.add(data, actionUserId);
+        const addedUser = users.add(data, actionUser.id);
         
         const passw = await UserRegistrationService.createPasswordForUser(addedUser);
-        console.log(passw);
         await users.save();
         return addedUser;
     }
 
-    static async getAll(parent = null, queryData = {}, { actionUserId }) {
+    static async getAll(parent = null, queryData = {}, { actionUser }) {
         const users = new UserRepository();
         await users.load();
 
-        if (actionUserId) {
-            new UserValidator(users.get({ id: actionUserId }))
-                .canSee('users');
-        }
+        new UserValidator(actionUser)
+            .canSee('users');
 
         return users.getAll(queryData);
     }
 
-    static async edit(parent, { id, data }, { actionUserId }) {
-        if (!actionUserId) {
-            throw ApiErrorFactory.authorizationTokenWasntProvided();
-        }
+    static async edit(parent, { id, data }, { actionUser }) {
         const users = new UserRepository();
         await users.load();
 
-        const actionUser = users.get({ id: actionUserId });
-        new UserValidator(actionUser, actionUserId)
+        new UserValidator(actionUser)
             .canEdit('users');
 
         UserValidator.validateDataToEdit(data);
@@ -73,15 +62,11 @@ class UserResolver {
         return updatedUser;
     }
 
-    static async delete(parent, { id }, {actionUserId}) {
-        if (!actionUserId) {
-            throw ApiErrorFactory.authorizationTokenWasntProvided();
-        }
+    static async delete(parent, { id }, {actionUser}) {
         const users = new UserRepository();
         await users.load();
 
-        const actionUser = users.get({ id: actionUserId });
-        new UserValidator(actionUser, actionUserId)
+        new UserValidator(actionUser)
             .canDelete('users');
 
         new UserValidator(users.get({ id }), id);
@@ -104,7 +89,6 @@ class UserResolver {
         const sesisonManager = new SessionManager()
         const session = sesisonManager.getSession(id);
     
-        console.log(session);
         if (!session) return false;
 
         const decodedAccessToken = sesisonManager.verifyAccessToken(session.accessToken);

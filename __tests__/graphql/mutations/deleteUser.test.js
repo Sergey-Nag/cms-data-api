@@ -29,11 +29,7 @@ jest.mock('../../../data/index.js', () => ({
 }));
 
 describe('deleteUser mutation', () => {
-    const mockWriteDataFn = jest.fn((name, data) => {
-        if (name === 'user-credentials') {
-            console.log('{creds}', data);
-        }
-    });
+    const mockWriteDataFn = jest.fn();
     const MOCK_UNIQID = 'Pageuniqid';
     uniqid.mockReturnValue(MOCK_UNIQID);
     jest.spyOn(data, 'writeData').mockImplementation(mockWriteDataFn);
@@ -43,7 +39,7 @@ describe('deleteUser mutation', () => {
     });
 
 
-    it('Should get auth token not provided error if requests without Auth header', async () => {
+    it('Should get unauthorized error if requests without Auth header', async () => {
         const deleteUser = {...mockUsers.at(-1)};
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
@@ -56,7 +52,7 @@ describe('deleteUser mutation', () => {
                 }`
             });
 
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.authorizationTokenWasntProvided().message);
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.unauthorized().message);
         expect(response.body.data.deleteUser).toBeNull();
     });
 
@@ -162,7 +158,7 @@ describe('deleteUser mutation', () => {
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });
 
-    it('Should get User not found error with wrong actionUserId', async () => {
+    it('Should get unauthorized error when action user id is not found', async () => {
         mockSessionForUser('not-existed-user-id', ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
@@ -178,7 +174,7 @@ describe('deleteUser mutation', () => {
 
         expect(response.body.data.deleteUser).toBeNull();
         expect(response.body.errors).toBeDefined();
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.userNotFound().message);
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.unauthorized().message);
         
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });

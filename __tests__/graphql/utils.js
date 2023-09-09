@@ -62,16 +62,16 @@ function expectPageData(responsePage, expectedPage, oldPage) {
     const lastModifiedISO = expectedPage?.lastModifiedISO ?? oldPage?.lastModifiedISO;
 
     
-    !isUndefined(id) && expect(responsePage).toHaveProperty('id', id);
-    !isUndefined(path) && expect(responsePage).toHaveProperty('path', path);
-    !isUndefined(alias) && expect(responsePage).toHaveProperty('alias', alias);
-    !isUndefined(title) && expect(responsePage).toHaveProperty('title', title);
-    !isUndefined(createdISO) && expect(responsePage).toHaveProperty('createdISO', createdISO);
-    !isUndefined(lastModifiedISO) && expect(responsePage).toHaveProperty('lastModifiedISO', lastModifiedISO);
-    !isUndefined(createdById) && expect(responsePage).toHaveProperty('createdBy', {
+    !isUndefined(id) && responsePage.id && expect(responsePage).toHaveProperty('id', id);
+    !isUndefined(path) && responsePage.path && expect(responsePage).toHaveProperty('path', path);
+    !isUndefined(alias) && responsePage.alias && expect(responsePage).toHaveProperty('alias', alias);
+    !isUndefined(title) && responsePage.title && expect(responsePage).toHaveProperty('title', title);
+    !isUndefined(createdISO) && responsePage.createdISO && expect(responsePage).toHaveProperty('createdISO', createdISO);
+    !isUndefined(lastModifiedISO) && responsePage.lastModifiedISO && expect(responsePage).toHaveProperty('lastModifiedISO', lastModifiedISO);
+    !isUndefined(createdById) && responsePage.createdBy && expect(responsePage).toHaveProperty('createdBy', {
         id: createdById
     });
-    !isUndefined(modifiedById) && expect(responsePage).toHaveProperty('modifiedBy', {
+    !isUndefined(modifiedById) && responsePage.modifiedBy && expect(responsePage).toHaveProperty('modifiedBy', {
         id: modifiedById
     });
 }

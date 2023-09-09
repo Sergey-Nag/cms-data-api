@@ -19,16 +19,6 @@ class PageRepository extends IRepository {
         updatedPage.update(data, actionUserId);
         return super.edit(id, updatedPage);
     }
-
-    // get() {
-    //     const pages = super.get(id);
-    //     if (!queryOptions) return pages;
-
-    //     const filter = new FilterByOption('title', queryOptions.title);
-    //     const filteredPaged = pages.filter(filter.isSatisfied);
-
-    //     return filteredPaged;
-    // }
 }
 
 module.exports = PageRepository;

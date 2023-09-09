@@ -2,27 +2,26 @@ const { PageRepository } = require('../../data/repositories');
 const PageValidatior = require('../../data/validators/PageValidator');
 const UserValidator = require('../../data/validators/UserValidator');
 const ApiErrorFactory = require('../../utils/ApiErrorFactory');
-const { loadUserById } = require('../utils');
+const UsersResolver = require('../user/UsersResolver');
 
 module.exports = class PagesResolver {
-    static async getAll(parent, { actionUserId, ...data }, context) {
+    static async getAll(parent, { ...data }, { actionUser }) {
         const pages = new PageRepository();
         await pages.load();
     
-        if (actionUserId) {
-            const actionUser = await loadUserById(actionUserId);  
-            new UserValidator(actionUser, actionUserId)
+        if (actionUser) {
+            new UserValidator(actionUser)
                 .canSee('pages');
         }
     
         return pages.getAll(data);
     }
-    static async get(parent, { actionUserId, ...data }, context) {
+    static async get(parent, { ...data }, { actionUser }) {
         const pages = new PageRepository();
         await pages.load();
     
-        if (actionUserId) {
-            new UserValidator(await loadUserById(actionUserId))
+        if (actionUser) {
+            new UserValidator(actionUser)
                 .canSee('pages');
         }
     
@@ -34,14 +33,12 @@ module.exports = class PagesResolver {
     
         return foundPage;
     }
-    static async edit(parent, {id, actionUserId, data}) {
+    static async edit(parent, {id, data}, { actionUser }) {
         const pages = new PageRepository();
         await pages.load();
     
-        if (actionUserId) {
-            new UserValidator(await loadUserById(actionUserId))
-                .canEdit('users');
-        }
+        new UserValidator(actionUser)
+            .canEdit('users');
     
         if (!pages.exist(id)) {
             throw ApiErrorFactory.pageNotFound(id);
@@ -49,7 +46,7 @@ module.exports = class PagesResolver {
     
         PageValidatior.validateDataToEdit(data);
     
-        const updatedPage = pages.edit(id, data, actionUserId);
+        const updatedPage = pages.edit(id, data, actionUser.id);
     
         if (!updatedPage) {
             throw ApiErrorFactory.somethingWentWrong();
@@ -59,30 +56,26 @@ module.exports = class PagesResolver {
         return updatedPage;
     };
 
-    static async add(parent, { actionUserId, ...data}) {
+    static async add(parent, data, { actionUser }) {
         const pages = new PageRepository();
         await pages.load();
     
-        if (actionUserId) {
-            new UserValidator(await loadUserById(actionUserId))
-                .canEdit('pages');
-        }
+        new UserValidator(actionUser)
+            .canEdit('pages');
     
         PageValidatior.validateDataToCreate(data);
     
-        const addedPage = pages.add(data, actionUserId);
+        const addedPage = pages.add(data, actionUser.id);
         await pages.save();
         return addedPage;
     }
 
-    static async delete(parent, { id, actionUserId }) {
+    static async delete(parent, { id }, { actionUser }) {
         const pages = new PageRepository();
         await pages.load();
     
-        if (actionUserId) {
-            new UserValidator(await loadUserById(actionUserId))
-                .canDelete('pages');
-        }
+        new UserValidator(actionUser)
+            .canDelete('pages');
     
         if (!pages.exist(id)) {
             throw ApiErrorFactory.pageNotFound(id);
@@ -95,5 +88,13 @@ module.exports = class PagesResolver {
     
         await pages.save();
         return deletedPages[0];
+    }
+
+    static async createdBy({ createdById }, args, context) {
+        return createdById && context.actionUser && UsersResolver.get(null, { id: createdById }, context);
+    }
+
+    static async modifiedBy({ modifiedById }, args, context) {
+        return modifiedById && context.actionUser && UsersResolver.get(null, { id: modifiedById }, context);
     }
 }

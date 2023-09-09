@@ -39,7 +39,7 @@ describe('editUser mutation', () => {
         jest.clearAllMocks();
     });
 
-    it('Should get auth token not provided error if requests without Auth header', async () => {
+    it('Should get unauthorized error if requests without Auth header', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `mutation {
@@ -54,7 +54,7 @@ describe('editUser mutation', () => {
                 }`
             });
 
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.authorizationTokenWasntProvided().message);
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.unauthorized().message);
         expect(response.body.data.editUser).toBeNull();
     });
 
@@ -164,12 +164,12 @@ describe('editUser mutation', () => {
             ApiErrorFactory.somethingWentWrong(),
         ],
         [
-            'Should get User not found error when actionUserId is wrong', 
+            'Should get unauthorized error when actionUserId is wrong', 
             {
                 id: mockUsers[2].id, 
                 actionUserId: 'not-existed-user-id'
             },
-            ApiErrorFactory.userNotFound(),
+            ApiErrorFactory.unauthorized(),
         ],
     ])('%s', async (_, { id, actionUserId}, error) => {
         mockSessionForUser(actionUserId, ACCESS_TOKEN);

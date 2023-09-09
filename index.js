@@ -36,7 +36,7 @@ app.use('/graphql',
         } 
         : {}
       ),
-      context: { actionUserId: req.userId },
+      context: { actionUser: req.user },
     }
   })
 );

@@ -4,7 +4,6 @@ const PagesResolver = require('./PagesResolver');
 
 const quertyFields = {
     id: { type: GraphQLString },
-    actionUserId: { type: GraphQLString },
     path: { type: new GraphQLList(GraphQLString) },
     alias: { type: GraphQLString },
     title: { type: GraphQLString },

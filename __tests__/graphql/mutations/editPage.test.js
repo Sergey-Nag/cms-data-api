@@ -6,6 +6,12 @@ const uniqid = require('uniqid');
 const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
+const { mockSessionForUser } = require('../../utils');
+const SessionManager = require('../../../managers/SessionManager');
+const { expectPageData } = require('../utils');
+jest.mock('../../../managers/SessionManager');
+
+const ACCESS_TOKEN = 'edit-page-access-token';
 
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
@@ -31,6 +37,23 @@ describe('aditPage mutation', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
+    
+    it('Should get unauthorized error if requests without Auth header', async () => {
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .send({
+                query: `mutation {
+                    editPage(
+                        id: "ololo"
+                        data: {}
+                    ) {
+                        id
+                    }
+                }`
+            });
+
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.unauthorized().message);
+        expect(response.body.data.editPage).toBeNull();
+    });
 
     it('Should update a page data by user that has access and return it', async () => {
         const enteredData = {
@@ -39,12 +62,13 @@ describe('aditPage mutation', () => {
             alias: 'page-alias',
             modifiedById: mockUsers[0].id,
         }
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `mutation {
                     editPage(
                         id: "${enteredData.id}"
-                        actionUserId: "${enteredData.modifiedById}"
                         data: {
                             title: "${enteredData.title}"
                             path: ["new", "path"]
@@ -113,7 +137,11 @@ describe('aditPage mutation', () => {
             acc[prop] = values[i];
             return acc;
         }, {});
+        const oldPage = {...mockPages[0]};
+
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 variables: {
                     updateData,
@@ -121,7 +149,6 @@ describe('aditPage mutation', () => {
                 query: `mutation EDIT($updateData: EditPageInput!) {
                     editPage(
                         id: "${mockPages[0].id}"
-                        actionUserId: "${mockUsers[0].id}"
                         data: $updateData
                     ) {
                         id
@@ -137,14 +164,7 @@ describe('aditPage mutation', () => {
         expect(response.body.errors).toBeUndefined();
         expect(response.body.data.editPage).toBeDefined();
         expect(response.body.data.editPage).toHaveProperty('lastModifiedISO', MOCK_ISO_TIME);
-
-        Object.keys(response.body.data.editPage).forEach((prop) => {
-            if (props.includes(prop)) {
-                expect(response.body.data.editPage).toHaveProperty(prop, updateData[prop]);
-            } else {
-                expect(response.body.data.editPage).toHaveProperty(prop, mockPages[0][prop]);
-            }
-        });
+        expectPageData(response.body.data.editPage, updateData, oldPage);
 
         expect(mockWriteDataFn).toHaveBeenCalled();
     });
@@ -180,16 +200,19 @@ describe('aditPage mutation', () => {
                 id: mockPages[0].id,
                 actionUserId: 'not-existed-page-id'
             },
-            ApiErrorFactory.userNotFound(),
+            ApiErrorFactory.unauthorized(),
         ],
-    ])('%s', async (_, variables, error) => {
+    ])('%s', async (_, {id, actionUserId}, error) => {
+        mockSessionForUser(actionUserId, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
-                variables,
-                query: `mutation EDIT($id: String! $actionUserId: String!) {
+                variables: {
+                    id
+                },
+                query: `mutation EDIT($id: String!) {
                     editPage(
                         id: $id
-                        actionUserId: $actionUserId
                         data: {
                             title: "new title"
                         }
@@ -251,7 +274,10 @@ describe('aditPage mutation', () => {
             acc[prop] = values[i];
             return acc;
         }, {});
+
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 variables: {
                     updateData,
@@ -259,7 +285,6 @@ describe('aditPage mutation', () => {
                 query: `mutation EDIT($updateData: EditPageInput!) {
                     editPage(
                         id: "${mockPages[0].id}"
-                        actionUserId: "${mockUsers[0].id}"
                         data: $updateData
                     ) {
                         id

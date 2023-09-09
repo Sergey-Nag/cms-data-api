@@ -8,6 +8,11 @@ const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const { expectPageData } = require('../utils');
 const { merge } = require('lodash');
+const SessionManager = require('../../../managers/SessionManager');
+jest.mock('../../../managers/SessionManager');
+const { mockSessionForUser } = require('../../utils');
+
+const ACCESS_TOKEN = 'delete-page-access-token';
 
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
@@ -33,12 +38,13 @@ describe('deleteUser mutation', () => {
 
     it('Should delete page by user that has access and return it', async () => {
         const deletePage = {...mockPages.at(-1)};
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `mutation {
                     deletePage(
                         id: "${deletePage.id}"
-                        actionUserId: "${mockUsers[0].id}"
                     ) {
                         id
                         path
@@ -66,12 +72,14 @@ describe('deleteUser mutation', () => {
 
     it('Should get Action forbidden error when action user has no access', async () => {
         const notDeletedPage = {...mockPages.at(-1)};
+        
+        mockSessionForUser(mockUsers[1].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `mutation {
                     deletePage(
                         id: "${notDeletedPage.id}"
-                        actionUserId: "${mockUsers[1].id}"
                     ) {
                         id
                     }
@@ -87,12 +95,13 @@ describe('deleteUser mutation', () => {
     });
 
     it('Should get Page not found error with wrong id', async () => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `mutation {
                     deletePage(
                         id: "not-existed-page-id"
-                        actionUserId: "${mockUsers[0].id}"
                     ) {
                         id
                     }
@@ -102,26 +111,6 @@ describe('deleteUser mutation', () => {
         expect(response.body.data.deletePage).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageNotFound('not-existed-page-id').message);
-        
-        expect(mockWriteDataFn).not.toHaveBeenCalled();
-    });
-
-    it('Should get User not found error with wrong actionUserId', async () => {
-        const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .send({
-                query: `mutation {
-                    deletePage(
-                        id: "${mockPages[2].id}"
-                        actionUserId: "not-existed-user-id"
-                    ) {
-                        id
-                    }
-                }`
-            });
-
-        expect(response.body.data.deletePage).toBeNull();
-        expect(response.body.errors).toBeDefined();
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.userNotFound().message);
         
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });

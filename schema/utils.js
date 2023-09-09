@@ -8,8 +8,8 @@ const loadUserById = async (id) => {
 
 const authProtect = (fn) => {
     return (...args) => {
-        if (!args[2].actionUserId) {
-            throw ApiErrorFactory.authorizationTokenWasntProvided();
+        if (!args[2].actionUser) {
+            throw ApiErrorFactory.unauthorized();
         }
 
         return fn(...args);

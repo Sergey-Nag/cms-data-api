@@ -42,7 +42,7 @@ describe('addUser mutation', () => {
         jest.clearAllMocks();
     });
 
-    it('Should get auth token not provided error if requests without Auth header', async () => {
+    it('Should get unauthorized error if requests without Auth header', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `mutation {
@@ -56,7 +56,7 @@ describe('addUser mutation', () => {
                 }`
             });
 
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.authorizationTokenWasntProvided().message);
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.unauthorized().message);
         expect(response.body.data.addUser).toBeNull();
     });
 

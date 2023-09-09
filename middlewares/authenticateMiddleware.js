@@ -1,3 +1,4 @@
+const { UserRepository } = require("../data/repositories");
 const SessionManager = require("../managers/SessionManager");
 const ApiErrorFactory = require("../utils/ApiErrorFactory");
 
@@ -28,7 +29,7 @@ function authenticateMiddleware(req, res, next) {
 /**
  * If token exists and it's expired should return 401 an error.
  */
-function authenticateNotExpiredTokenMiddleware(req, res, next) {
+async function authenticateNotExpiredTokenMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -46,7 +47,12 @@ function authenticateNotExpiredTokenMiddleware(req, res, next) {
                 throw ApiErrorFactory.tokenExpired();
             }
 
-            req.userId = decodedUserData?.userId ?? null;
+            const usersRepo = new UserRepository();
+            await usersRepo.load();
+            
+            const user = usersRepo.get({ id: decodedUserData?.userId });
+
+            req.user = user;
         } catch (error) {
             // Token verification failed
             console.log(error);

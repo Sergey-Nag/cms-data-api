@@ -5,6 +5,11 @@ const server = require('../../../index');
 const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
+const SessionManager = require('../../../managers/SessionManager');
+const { mockSessionForUser } = require('../../utils');
+jest.mock('../../../managers/SessionManager');
+
+const ACCESS_TOKEN = 'page-access-token';
 
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
@@ -22,7 +27,7 @@ describe('page query', () => {
         jest.clearAllMocks();
     });
 
-    it('Should get specific page by id with all params', async () => {
+    it('Should get specific page by id with all params (except created and modified by users) without Auth header', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `{
@@ -49,50 +54,65 @@ describe('page query', () => {
 
         expect(response.body.errors).toBeUndefined();
         expect(response.body.data.page).toBeDefined();
-        const {id, createdById, modifiedById, contentId, ...rest} = mockPages[0];
-        const createdBy = createdById && mockUsers.find(({id}) => id === createdById );
-        const modifiedBy = modifiedById && mockUsers.find(({id}) => id === modifiedById );
+        const {id, contentId, createdById, modifiedById, ...rest} = mockPages[0];
 
         const expectedData = {
             ...rest,
             id,
-            createdBy: createdBy && {
-                id: createdBy.id,
-                firstname: createdBy.firstname,
-            },
-            modifiedBy: modifiedBy && {
-                id: modifiedBy.id,
-                firstname: modifiedBy.firstname,
-            },
+            createdBy: null,
+            modifiedBy: null,
             content: null,
         }
         expect(response.body.data.page).toEqual(expectedData);
     });
 
-    it('Should get specific page by id when action user has access', async () => {
+    it('Should get specific page by id when action user has access and can see created and modified by users', async () => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                 {
-                    page(id: "${mockPages[1].id}" actionUserId: "${mockUsers[0].id}") {
+                    page(id: "${mockPages[1].id}") {
                         id
+                        createdBy {
+                            id
+                            firstname
+                        }
+                        modifiedBy {
+                            id
+                            firstname
+                        }
                     }
                 }
                 `
             });
 
         expect(response.body.errors).toBeUndefined();
+        
+        const createdBy = mockUsers.find(({id}) => id === mockPages[1].createdById );
+        const modifiedBy = mockUsers.find(({id}) => id === mockPages[1].modifiedById );
         expect(response.body.data.page).toEqual({
-            id: mockPages[1].id
+            id: mockPages[1].id,
+            createdBy: {
+                id: createdBy.id,
+                firstname: createdBy.firstname,
+            },
+            modifiedBy: {
+                id: modifiedBy.id,
+                firstname: modifiedBy.firstname
+            }
         });
     });
 
     it('Should get Action forbidden error when action user has no access', async () => {
+        mockSessionForUser(mockUsers[1].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                 {
-                    page(id: "${mockPages[1].id}" actionUserId: "${mockUsers[1].id}") {
+                    page(id: "${mockPages[1].id}") {
                         id
                     }
                 }

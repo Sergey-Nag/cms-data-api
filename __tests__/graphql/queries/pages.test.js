@@ -6,6 +6,12 @@ const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 
+const SessionManager = require('../../../managers/SessionManager');
+const { mockSessionForUser } = require('../../utils');
+jest.mock('../../../managers/SessionManager');
+
+const ACCESS_TOKEN = 'pages-access-token';
+
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
         if (name === 'users') {
@@ -22,7 +28,7 @@ describe('pages query', () => {
         jest.clearAllMocks();
     });
 
-    it('Should get list of pages with all params', async () => {
+    it('Should get list of pages with all params (except created and modified by users)', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `{
@@ -51,20 +57,11 @@ describe('pages query', () => {
         expect(response.body.data.pages).toBeDefined();
         expect(response.body.data.pages.length).toBe(5);
         const expectedData = mockPages.map(({id, createdById, modifiedById, contentId, ...rest}) => {
-            const createdBy = createdById && mockUsers.find(({id}) => id === createdById );
-            const modifiedBy = modifiedById && mockUsers.find(({id}) => id === modifiedById );
-
             return {
                 ...rest,
                 id,
-                createdBy: createdBy && {
-                    id: createdBy.id,
-                    firstname: createdBy.firstname,
-                },
-                modifiedBy: modifiedBy && {
-                    id: modifiedBy.id,
-                    firstname: modifiedBy.firstname,
-                },
+                createdBy: null,
+                modifiedBy: null,
                 content: null
             }
         })
@@ -72,12 +69,22 @@ describe('pages query', () => {
     });
 
     it('Should get list of pages when action user has access', async () => {
+        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                 {
-                    pages(actionUserId: "${mockUsers[0].id}") {
+                    pages {
                         id
+                        createdBy {
+                            id
+                            firstname
+                        }
+                        modifiedBy {
+                            id
+                            firstname
+                        }
                     }
                 }
                 `
@@ -85,15 +92,32 @@ describe('pages query', () => {
 
         expect(response.body.errors).toBeUndefined();
         expect(response.body.data.pages.length).toBe(5);
-        expect(response.body.data.pages).toEqual(mockPages.map(({ id })=> ({ id })));
+        const expectedMap = mockPages.map(({ id, createdById, modifiedById })=> {
+            const createdBy = createdById && mockUsers.find(({id}) => id === createdById );
+            const modifiedBy = modifiedById && mockUsers.find(({id}) => id === modifiedById );
+            return {
+                id,
+                modifiedBy: modifiedBy ? {
+                    id: modifiedBy.id,
+                    firstname: modifiedBy.firstname,
+                } : null,
+                createdBy: createdBy ? {
+                    id: createdBy.id,
+                    firstname: createdBy.firstname,
+                } : null
+            } 
+        });
+        expect(response.body.data.pages).toEqual(expectedMap);
     });
 
     it('Should get Action forbidden error when action user has no access', async () => {
+        mockSessionForUser(mockUsers[1].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
             .send({
                 query: `
                 {
-                    pages(actionUserId: "${mockUsers[1].id}") {
+                    pages {
                         id
                     }
                 }

@@ -1,6 +1,7 @@
 const { GraphQLString, GraphQLNonNull,GraphQLList, GraphQLInputObjectType, GraphQLBoolean } = require('graphql');
 const { UserType, AdminPagesRights, UserPermissionsInput } = require('./type');
 const UserResolver = require('./UsersResolver');
+const { authProtect } = require('../utils');
 
 const userEditableFields = {
     firstname: { type: GraphQLString },
@@ -31,7 +32,7 @@ module.exports = {
                 },
             },
         },
-        resolve: UserResolver.add,
+        resolve: authProtect(UserResolver.add),
     },
     editUser: {
         type: UserType,
@@ -42,13 +43,13 @@ module.exports = {
                 args: userEditableFields,
             },
         },
-        resolve: UserResolver.edit,
+        resolve: authProtect(UserResolver.edit),
     },
     deleteUser: {
         type: UserType,
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) },
         },
-        resolve: UserResolver.delete,
+        resolve: authProtect(UserResolver.delete),
     }
 }
