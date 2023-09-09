@@ -57,4 +57,7 @@ module.exports = class ApiErrorFactory {
     static unauthorized(){
         return new Error('Unauthorized!');
     }
+    static sessionExpired() {
+        return new Error('Session is expired!');
+    }
 }

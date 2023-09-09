@@ -1,5 +1,6 @@
 const { UserRepository } = require("../data/repositories");
 const SessionManager = require("../managers/SessionManager");
+const { TokenManager } = require("../managers/TokenManager");
 const ApiErrorFactory = require("../utils/ApiErrorFactory");
 
 /**
@@ -13,9 +14,14 @@ function authenticateMiddleware(req, res, next) {
 
         try {
             const usersSession = new SessionManager();
+            const tokenManager = new TokenManager();
+            const userData = tokenManager.verifyAccessToken(token);
 
-            const userData = usersSession.verifyAccessToken(token);
-            req.userId = userData?.userId ?? null;
+            if (!usersSession.getSession(userData?.userId)) {
+                req.userId = null;
+            } else {
+                req.userId = userData?.userId;
+            }
         } catch (error) {
             // Token verification failed
             // console.log(error);
@@ -37,14 +43,11 @@ async function authenticateNotExpiredTokenMiddleware(req, res, next) {
 
         try {
             const usersSession = new SessionManager();
-            const decodedUserData = usersSession.verifyAccessToken(token);
-
+            const tokenManager = new TokenManager();
+            const decodedUserData = tokenManager.verifyAccessToken(token);
+            
             if (!usersSession.getSession(decodedUserData.userId)) {
                 throw ApiErrorFactory.tokenObsolete();
-            }
-
-            if (usersSession.isTokenExpired(decodedUserData)) {
-                throw ApiErrorFactory.tokenExpired();
             }
 
             const usersRepo = new UserRepository();
@@ -55,7 +58,7 @@ async function authenticateNotExpiredTokenMiddleware(req, res, next) {
             req.user = user;
         } catch (error) {
             // Token verification failed
-            console.log(error);
+            // console.log(error);
             return res.status(401).json({ errors: [{message: error.message}] })
         }
     }

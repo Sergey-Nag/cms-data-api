@@ -91,9 +91,7 @@ class UserResolver {
     
         if (!session) return false;
 
-        const decodedAccessToken = sesisonManager.verifyAccessToken(session.accessToken);
-
-        return !sesisonManager.isTokenExpired(decodedAccessToken);
+        return sesisonManager.isSessionExpired(session);
     }
 }
 

@@ -94,7 +94,6 @@ router.post('/logout', [authenticateRequiredMiddleware, authenticateMiddleware],
         const userId = req.userId;
         await UserAuthenticationService.logoutUser(userId);
         const sessions = new SessionManager();
-
         if (!sessions.getSession(userId)) {
             throw ApiErrorFactory.unauthorized();
         }

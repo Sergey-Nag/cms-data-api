@@ -5,7 +5,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const schema = require('./schema');
 const swaggerConf = require('./swaggerConfig');
-const userRoutes = require('./restApi/userRoutes');
+const restApiRouter = require('./restApi');
+
 const { authenticateNotExpiredTokenMiddleware } = require('./middlewares/authenticateMiddleware');
 const app = express();
 
@@ -21,7 +22,7 @@ if (isDev) {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerConf));
 }
 
-app.use('/api', userRoutes);
+app.use('/api', restApiRouter);
 app.use('/graphql',
   authenticateNotExpiredTokenMiddleware,
   graphqlHTTP((req) => {

@@ -7,6 +7,7 @@ const { REST_ENDPOINT } = require('../constants.js');
 const ApiErrorFactory = require('../../utils/ApiErrorFactory.js');
 const SessionManager = require('../../managers/SessionManager.js');
 const ApiSuccessFactory = require('../../utils/ApiSuccessFactory.js');
+const { TokenManager } = require('../../managers/TokenManager.js');
 
 jest.mock('../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((dataName) => {
@@ -20,6 +21,7 @@ jest.mock('../../data/index.js', () => ({
 }));
 
 jest.mock('../../managers/SessionManager.js');
+jest.mock('../../managers/TokenManager.js');
 
 const apiEndpoint = `${REST_ENDPOINT}/logout`;
 
@@ -73,7 +75,7 @@ describe('REST /logout', () => {
         });
         const mockGetSession = jest.fn((id) => id === userId);
 
-        jest.spyOn(SessionManager.prototype, 'verifyAccessToken').mockImplementation(mockVerifyToken);
+        jest.spyOn(TokenManager.prototype, 'verifyAccessToken').mockImplementation(mockVerifyToken);
         jest.spyOn(SessionManager.prototype, 'getSession').mockImplementation(mockGetSession);
 
         const response = await supertest(server).post(apiEndpoint)

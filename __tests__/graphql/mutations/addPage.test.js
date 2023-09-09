@@ -7,7 +7,9 @@ const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const SessionManager = require('../../../managers/SessionManager');
+const {TokenManager} = require('../../../managers/TokenManager');
 jest.mock('../../../managers/SessionManager');
+jest.mock('../../../managers/TokenManager');
 const { mockSessionForUser } = require('../../utils');
 
 const ACCESS_TOKEN = 'access-token';

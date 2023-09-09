@@ -3,16 +3,18 @@ const mockPages = require('./__mocks__/pages.json');
 const mockCredentials = require('./__mocks__/user-credentials.json');
 
 const SessionManager = require('../managers/SessionManager');
+const {TokenManager} = require('../managers/TokenManager');
 const ApiErrorFactory = require('../utils/ApiErrorFactory');
 
 const mockSessionForUser = (userId, accessToken = 'test-token') => {
-    jest.spyOn(SessionManager.prototype, 'verifyAccessToken').mockImplementation((token) => {
+    jest.spyOn(TokenManager.prototype, 'verifyAccessToken').mockImplementation((token) => {
         if (token === accessToken) {
             return { userId };
         }
         throw ApiErrorFactory.tokenExpired();
     });
-    jest.spyOn(SessionManager.prototype, 'getSession').mockImplementation((id) => id === userId && { accessToken, refreshToken: '' });
+    jest.spyOn(SessionManager.prototype, 'getSession').mockImplementation((id) => id === userId ? { accessToken, refreshToken: '' } : null);
+    jest.spyOn(SessionManager.prototype, 'isSessionExpired').mockImplementation((session) => session.accessToken === accessToken);
 }
 
 const mockReadData = (name) => {

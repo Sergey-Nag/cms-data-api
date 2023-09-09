@@ -1,11 +1,6 @@
 const jwt = require('jsonwebtoken');
 const ApiErrorFactory = require('../utils/ApiErrorFactory');
-
-const SECRET_ACCESS_TOKEN = process.env.SECRET_ACCESS_TOKEN ?? 'secret-access-token';
-const SECRET_REFRESH_TOKEN = process.env.SECRET_REFRESH_TOKEN ?? 'secret-refresh-token';
-
-const SECRET_ACCESS_TIME = process.env.SECRET_ACCESS_TIME ?? '1h';
-const SECRET_REFRESH_TIME = process.env.SECRET_REFRESH_TIME ?? '2h';
+const { TokenManager } = require('./TokenManager');
 
 class SessionManager {
     static instance = null;
@@ -19,16 +14,15 @@ class SessionManager {
         }
 
         this.storage = new Map();
+        this.tokenManager = new TokenManager();
 
         SessionManager.instance = this;
     }
 
     createSession(userId) {
-        // Generate a JWT containing user information.
-        const accessToken = this.#generateToken(userId, SECRET_ACCESS_TOKEN, SECRET_ACCESS_TIME);
-        const refreshToken = this.#generateToken(userId, SECRET_REFRESH_TOKEN, SECRET_REFRESH_TIME);
+        const accessToken = this.tokenManager.generateAccessToken({userId});
+        const refreshToken = this.tokenManager.generateRefreshToken({userId});
         
-        // Store the token in the session data.
         const sessionData = {
             accessToken,
             refreshToken,
@@ -39,42 +33,30 @@ class SessionManager {
         return sessionData;
     }
 
-    verifyAccessToken(token) {
-        return this.#verifyToken(token, SECRET_ACCESS_TOKEN);
-    }
-
-    verifyRefreshToken(token) {
-        return this.#verifyToken(token, SECRET_REFRESH_TOKEN);
-    }
-
     getSession(userId) {
-        return this.storage.get(userId);
+        const session = this.storage.get(userId);
+        if (!session) return null;
+
+        if (this.isSessionExpired(session)) {
+            this.endSession(userId);
+            throw ApiErrorFactory.sessionExpired();
+        }
+
+        return session;
+    }
+
+    isSessionExpired(session) {
+        const decodedAccessToken = this.tokenManager.verifyAccessToken(session.accessToken);
+        const decodedRefreshToken = this.tokenManager.verifyRefreshToken(session.refreshToken);
+
+        return (
+            this.tokenManager.isTokenExpired(decodedAccessToken) 
+            || this.tokenManager.isTokenExpired(decodedRefreshToken)
+        );
     }
 
     endSession(userId) {
-        // Delete the session data when the user logs out or the session expires.
         this.storage.delete(userId);
-    }
-
-    #generateToken(userId, secret, time) {
-        return jwt.sign({ userId }, secret, { expiresIn: time });
-    }
-
-    #verifyToken(token, secret) {
-        try {
-            const decoded = jwt.verify(token, secret);
-            
-            return decoded;
-        } catch(e) {
-            throw ApiErrorFactory.tokenInvalid(e?.message);
-        }
-    }
-
-    isTokenExpired(decoded) {
-        const expTimeStamp = new Date(decoded.ext * 1000);
-        const now = new Date();
-
-        return now > expTimeStamp;
     }
 }
 
