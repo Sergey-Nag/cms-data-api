@@ -183,7 +183,7 @@ describe('editUser mutation', () => {
         const updateData = {
             firstname: 'new test name',
             lastname: 'new last name',
-            email: 'new@email.com',
+            email: 'other-new.mail@email.com',
             permissions: {
                 canSee: {
                     analytics: true,
@@ -311,6 +311,9 @@ describe('editUser mutation', () => {
         ],
         [
             ['email'], ['ho ho'], ApiErrorFactory.userEmailInvalid(),
+        ],
+        [
+            ['email'], ['johndoe@example.com'], ApiErrorFactory.userAlreadyExists('email'),
         ],
         [
             ['email'], ['abta@.ss'], ApiErrorFactory.userEmailInvalid(),

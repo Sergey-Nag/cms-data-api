@@ -1,8 +1,8 @@
 const DataFilter = require("./DataFilter");
 
 class DataFinder extends DataFilter {
-    constructor(options) {
-        super(options);
+    constructor(options, isExact) {
+        super(options, isExact);
     }
 
     find(data) {

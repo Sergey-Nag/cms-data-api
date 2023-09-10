@@ -63,4 +63,18 @@ module.exports = class ApiErrorFactory {
     static dataNotProvided() {
         return new Error('Data was not provided');
     }
+    static userAlreadyExists(prop) {
+        return new Error(
+            prop 
+            ? `User with the same ${prop} already exists!`
+            : 'User already exist!'
+        );
+    }
+    static pageAlreadyExists(prop) {
+        return new Error(
+            prop 
+            ? `Page with the same ${prop} already exists!`
+            : 'Page already exists!'
+        );
+    }
 }

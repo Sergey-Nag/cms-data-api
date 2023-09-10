@@ -8,13 +8,13 @@ class Repository {
         this.dataName = dataName;
         this.data = [];
     }
-    getAll(queryData) {
+    getAll(queryData, isExact) {
         if (isEmpty(queryData)) return this.data;
-        return this.#filter(queryData);
+        return this.#filter(queryData, isExact);
     }
-    get(queryData) {
+    get(queryData, isExact) {
         if (isEmpty(queryData)) return null;
-        return this.#find(queryData);
+        return this.#find(queryData, isExact);
     }
     add(data) {
         this.data.push(data);
@@ -41,14 +41,14 @@ class Repository {
         return this.data.findIndex((data) => data.id === id) !== -1;
     }
 
-    #filter(queryOptions) {
-        const dataFilter = new DataFilter(queryOptions);
+    #filter(queryOptions, isExact) {
+        const dataFilter = new DataFilter(queryOptions, isExact);
         const filteredData = dataFilter.find(this.data);
         return filteredData;
     }
 
-    #find(queryOptions) {
-        const dataFinder = new DataFinder(queryOptions);
+    #find(queryOptions, isExact) {
+        const dataFinder = new DataFinder(queryOptions, isExact);
         const foundData = dataFinder.find(this.data);
         return foundData;
     }

@@ -128,7 +128,8 @@ describe('addPage mutation', () => {
         expect(mockWriteDataFn).toHaveBeenCalledWith('pages', mockPages);
     });
 
-    it('Should create alias automatically when it is not provided', async () => {
+    it('Should get page with same title already exist error', async () => {
+        expect(mockPages).toHaveLength(6);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
@@ -143,10 +144,56 @@ describe('addPage mutation', () => {
                 `
             });
         
+        expect(response.body.data.addPage).toBeNull();
+        expect(response.body.errors).toBeDefined();
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageAlreadyExists('title').message);
+        expect(mockPages).toHaveLength(6);
+    });
+
+    it('Should get page with same alias already exist error', async () => {
+        expect(mockPages).toHaveLength(6);
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
+            .send({
+                query: `mutation {
+                    addPage(
+                        title: "Some other page title"
+                        path: ["index", "page"]
+                        alias: "new-alias-1"
+                    ) {
+                        alias
+                    }
+                }
+                `
+            });
+        
+        expect(response.body.data.addPage).toBeNull();
+        expect(response.body.errors).toBeDefined();
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageAlreadyExists('alias').message);
+        expect(mockPages).toHaveLength(6);
+    });
+
+    it('Should create alias automatically when it is not provided', async () => {
+        expect(mockPages).toHaveLength(6);
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
+            .send({
+                query: `mutation {
+                    addPage(
+                        title:"New Page 2"
+                        path: ["new", "page","path"]
+                    ) {
+                        alias
+                    }
+                }
+                `
+            });
+        
         expect(response.body.errors).toBeUndefined();
         expect(response.body.data.addPage).toBeDefined();
 
-        expect(response.body.data.addPage).toHaveProperty('alias', 'new-page');
+        expect(response.body.data.addPage).toHaveProperty('alias', 'new-page-2');
+        expect(mockPages).toHaveLength(7);
     });
 
     it('Should get Action forbidden error when action user has no access', async () => {

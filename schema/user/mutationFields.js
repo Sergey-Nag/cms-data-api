@@ -2,6 +2,7 @@ const { GraphQLString, GraphQLNonNull,GraphQLList, GraphQLInputObjectType, Graph
 const { UserType, AdminPagesRights, UserPermissionsInput } = require('./type');
 const UserResolver = require('./UsersResolver');
 const { authProtect } = require('../utils');
+const { addUserProtect, editUserProtect } = require('./mutationProtections');
 
 const userEditableFields = {
     firstname: { type: GraphQLString },
@@ -32,7 +33,7 @@ module.exports = {
                 },
             },
         },
-        resolve: authProtect(UserResolver.add),
+        resolve: authProtect(addUserProtect(UserResolver.add)),
     },
     editUser: {
         type: UserType,
@@ -43,7 +44,7 @@ module.exports = {
                 args: userEditableFields,
             },
         },
-        resolve: authProtect(UserResolver.edit),
+        resolve: authProtect(editUserProtect(UserResolver.edit)),
     },
     deleteUser: {
         type: UserType,

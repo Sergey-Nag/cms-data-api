@@ -170,11 +170,11 @@ describe('addUser mutation', () => {
         ]));
     });
 
-    it('Should save credentials and user and with permissions by user that has access and return it', async () => {
+    it('Should save credentials and user with permissions by user that has access and return it', async () => {
         const enteredData = {
             firstname: 'Test',
             lastname: 'User 1',
-            email: 'testu1@mail.com',
+            email: 'new.user.email1@mail.com',
             createdById: mockUsers[0].id,
             permissions: {
                 canSee: {
@@ -242,6 +242,30 @@ describe('addUser mutation', () => {
             expect.objectContaining({ id: response.body.data.addUser.id })
         ]));
         expect(mockWriteDataFn).toHaveBeenCalledWith(USERS_REPO_NAME, mockUsers);
+    });
+
+    it('Should get user with same email exist error', async () => {
+        expect(mockUsers).toHaveLength(7);
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${userWithoutAccessToken}`)
+            .send({
+                query: `mutation {
+                    addUser(
+                        firstname: "test name"
+                        email: "johndoe@example.com"
+                    ) {
+                        id
+                        lastname
+                    }
+                }`
+            });
+
+        expect(response.body.data.addUser).toBeNull();
+        expect(response.body.errors).toBeDefined();
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.userAlreadyExists('email').message);
+        expect(mockWriteDataFn).not.toHaveBeenCalledWith(USERS_REPO_NAME);
+        expect(mockWriteDataFn).not.toHaveBeenCalledWith('user-credentials');
+        expect(mockUsers).toHaveLength(7);
     });
 
     it('Should get Action forbidden error when action user has no access', async () => {

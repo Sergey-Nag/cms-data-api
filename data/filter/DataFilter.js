@@ -1,8 +1,8 @@
 const MatchByObjectOptions = require("./MatchByObjectOptions");
 
 class DataFilter {
-    constructor(options) {
-        this.matcher = new MatchByObjectOptions(null, options);
+    constructor(options, isExact) {
+        this.matcher = new MatchByObjectOptions(null, options, isExact);
     }
 
     find(data) {

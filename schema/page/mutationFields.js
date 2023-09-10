@@ -2,6 +2,7 @@ const { GraphQLString, GraphQLNonNull, GraphQLList, GraphQLInputObjectType } = r
 const {PageType} = require('./type');
 const PagesResolver = require('./PagesResolver');
 const { authProtect } = require('../utils');
+const { addPageProtect, editPageProtect } = require('./mutationProtection');
 
 const editFields = {
     path: { type: new GraphQLList(GraphQLString) },
@@ -30,7 +31,7 @@ module.exports = {
                 args: editFields
             }
         },
-        resolve: authProtect(PagesResolver.edit),
+        resolve: authProtect(editPageProtect(PagesResolver.edit)),
     },
     addPage: {
         type: PageType,
@@ -43,7 +44,7 @@ module.exports = {
                 type: GraphQLString 
             },
         },
-        resolve: authProtect(PagesResolver.add),
+        resolve: authProtect(addPageProtect(PagesResolver.add)),
     },
     deletePage: {
         type: PageType,
