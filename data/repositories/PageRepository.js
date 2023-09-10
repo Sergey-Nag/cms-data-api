@@ -1,9 +1,10 @@
+const { PAGES_REPO_NAME } = require('../../constants/repositoryNames');
 const Page = require('../models/pages/Page');
 const IRepository = require('./Repository');
 
 class PageRepository extends IRepository {
     constructor() {
-        super('pages');
+        super(PAGES_REPO_NAME);
     }
     
     add(data, actionUserId) {

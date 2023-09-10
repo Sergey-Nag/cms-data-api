@@ -33,14 +33,30 @@ class SessionManager {
         return sessionData;
     }
 
+    refreshSession(userId) {
+        const session = this.getSession(userId);
+        if (!session) return null;
+
+        const accessToken = this.tokenManager.generateAccessToken({userId});
+
+        const updatedSession = {
+            refreshToken: session.refreshToken,
+            accessToken,
+        }
+
+        this.storage.set(userId, updatedSession);
+
+        return updatedSession;
+    }
+
     getSession(userId) {
         const session = this.storage.get(userId);
         if (!session) return null;
 
-        if (this.isSessionExpired(session)) {
-            this.endSession(userId);
-            throw ApiErrorFactory.sessionExpired();
-        }
+        // if (this.isSessionExpired(session)) {
+        //     this.endSession(userId);
+        //     throw ApiErrorFactory.sessionExpired();
+        // }
 
         return session;
     }
@@ -49,10 +65,7 @@ class SessionManager {
         const decodedAccessToken = this.tokenManager.verifyAccessToken(session.accessToken);
         const decodedRefreshToken = this.tokenManager.verifyRefreshToken(session.refreshToken);
 
-        return (
-            this.tokenManager.isTokenExpired(decodedAccessToken) 
-            || this.tokenManager.isTokenExpired(decodedRefreshToken)
-        );
+        return this.tokenManager.isTokenExpired(decodedRefreshToken);
     }
 
     endSession(userId) {

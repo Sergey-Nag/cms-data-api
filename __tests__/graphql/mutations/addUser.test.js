@@ -9,19 +9,19 @@ const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const { expectUserData } = require('../utils');
 const SessionManager = require('../../../managers/SessionManager');
-jest.mock('../../../managers/SessionManager');
-const { mockSessionForUser } = require('../../utils');
-
-const ACCESS_TOKEN = 'test-access-token';
+const { USERS_REPO_NAME, PAGES_REPO_NAME, USER_CREDS_REPO_NAME } = require('../../../constants/repositoryNames');
+const mockUsersRepoName = USERS_REPO_NAME;
+const mockPagesRepoName = PAGES_REPO_NAME;
+const mockCredsRepoName = USER_CREDS_REPO_NAME;
 
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === 'users') {
+        if (name === mockUsersRepoName) {
             return Promise.resolve(mockUsers);
-        } else if (name === 'pages') {
+        } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
-        } else if (name === 'user-credentials') {
+        } else if (name === mockCredsRepoName) {
             return Promise.resolve(mockCredentials);
         }
     }),
@@ -37,6 +37,21 @@ describe('addUser mutation', () => {
     const MOCK_UNIQID = 'Useruniq';
     jest.spyOn(data, 'writeData').mockImplementation(mockWriteDataFn);
     uniqid.mockReturnValue(MOCK_UNIQID);
+    
+    let userWithAccessToken, userWithoutAccessToken;
+    const session = new SessionManager();
+
+    beforeAll(() => {
+        const first = session.createSession(mockUsers[0].id);
+        const second = session.createSession(mockUsers[1].id);
+        userWithAccessToken = first.accessToken;
+        userWithoutAccessToken = second.accessToken;
+    });
+
+    afterAll(() => {
+        session.endSession(mockUsers[0].id);
+        session.endSession(mockUsers[1].id);
+    });
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -61,7 +76,6 @@ describe('addUser mutation', () => {
     });
 
     it('Should save credentials and user with proper values (without permissions) by user that has access and return it', async () => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const enteredData = {
             firstname: 'Test',
             lastname: 'User 1',
@@ -69,7 +83,7 @@ describe('addUser mutation', () => {
             createdById: mockUsers[0].id,
         };
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
                     addUser(
@@ -150,8 +164,8 @@ describe('addUser mutation', () => {
         const { addUser } = response.body.data;
         expectUserData(addUser, expectedData);
         expect(mockUsers).toContainEqual(expectedData);
-        expect(mockWriteDataFn).toHaveBeenCalledWith('users', mockUsers);
-        expect(mockWriteDataFn).toHaveBeenCalledWith('user-credentials', expect.arrayContaining([
+        expect(mockWriteDataFn).toHaveBeenCalledWith(USERS_REPO_NAME, mockUsers);
+        expect(mockWriteDataFn).toHaveBeenCalledWith(USER_CREDS_REPO_NAME, expect.arrayContaining([
             expect.objectContaining({ id: response.body.data.addUser.id })
         ]));
     });
@@ -178,10 +192,9 @@ describe('addUser mutation', () => {
                 },
             }
         };
-        mockSessionForUser(enteredData.createdById, ACCESS_TOKEN);
 
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 variables: {
                     permissions: enteredData.permissions,
@@ -228,13 +241,12 @@ describe('addUser mutation', () => {
         expect(mockWriteDataFn).toHaveBeenCalledWith('user-credentials', expect.arrayContaining([
             expect.objectContaining({ id: response.body.data.addUser.id })
         ]));
-        expect(mockWriteDataFn).toHaveBeenCalledWith('users', mockUsers);
+        expect(mockWriteDataFn).toHaveBeenCalledWith(USERS_REPO_NAME, mockUsers);
     });
 
     it('Should get Action forbidden error when action user has no access', async () => {
-        mockSessionForUser(mockUsers[1].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithoutAccessToken}`)
             .send({
                 query: `mutation {
                     addUser(
@@ -250,7 +262,7 @@ describe('addUser mutation', () => {
         expect(response.body.data.addUser).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.actionForbidden().message);
-        expect(mockWriteDataFn).not.toHaveBeenCalledWith('users');
+        expect(mockWriteDataFn).not.toHaveBeenCalledWith(USERS_REPO_NAME);
         expect(mockWriteDataFn).not.toHaveBeenCalledWith('user-credentials');
     });
 
@@ -263,9 +275,8 @@ describe('addUser mutation', () => {
         ['invalid email "@.dd"', 'firstname: "some" email: "@.dd"', ApiErrorFactory.userEmailInvalid()],
         ['invalid email "asd@.dd"', 'firstname: "some" email: "asd@.dd"', ApiErrorFactory.userEmailInvalid()],
     ])('Should get %s error', async (_, params, error) => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
                     addUser(

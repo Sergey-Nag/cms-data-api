@@ -1,72 +1,77 @@
 const express = require('express');
 const ApiErrorFactory = require('../utils/ApiErrorFactory');
+const { TokenManager } = require('../managers/TokenManager');
+const SessionManager = require('../managers/SessionManager');
+const { authenticateRequiredMiddleware, authenticateMiddleware } = require('../middlewares/authenticateMiddleware');
 const router = express.Router();
-
 /**
- * @swagger
- *   /refresh-token:
- *     post:
- *       summary: Refresh Access Token
- *       description: |
- *         This endpoint allows users to refresh their access tokens using a valid refresh token.
- *         If a valid refresh token is provided, a new access token will be generated and returned.
- *       tags:
- *         - Authentication
- *       consumes:
- *         - application/json
- *       parameters:
- *         - in: body
- *           name: token
- *           description: Refresh token
- *           required: true
+ * @openapi
+ * /refresh-token:
+ *   post:
+ *     security:
+ *        - BearerAuth: []
+ *     summary: Refresh Access Token
+ *     description: |
+ *       This endpoint allows users to refresh their access tokens using a valid refresh token.
+ *       If a valid refresh token is provided, a new access token will be generated and returned.
+ *     tags:
+ *       - Token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
  *               refreshToken:
  *                 type: string
- *       responses:
- *         200:
- *           description: Successfully refreshed access token
- *           schema:
- *             type: object
- *             properties:
- *               accessToken:
- *                 type: string
- *         400:
- *           description: Bad Request
- *           schema:
- *             type: object
- *             properties:
- *               error:
- *                 type: string
- *                 description: Invalid refresh token
- *         401:
- *           description: Unauthorized
- *           schema:
- *             type: object
- *             properties:
- *               error:
- *                 type: string
- *                 description: Refresh token has expired
+ *     responses:
+ *       '200':
+ *         description: Successful response
+ *       '401':
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ * components:
+ *  securitySchemes:
+ *     BearerAuth:
+ *      type: http
+ *      scheme: bearer
  */
-router.post('/refresh-token', (req, res) => {
-    const { refreshToken } = req.body;
 
-    if (!refreshToken) {
-        return res.status(400).json({ error: ApiErrorFactory.tokenInvalid().message });
+router.post('/refresh-token', [authenticateRequiredMiddleware, authenticateMiddleware], (req, res) => {
+    const { refreshToken } = req.body;
+    try {
+        const tokenManager = new TokenManager();
+        const userId = req.userId;
+
+        if (!userId) {
+            throw ApiErrorFactory.tokenInvalid();
+        }
+
+        const decodedToken = tokenManager.verifyRefreshToken(refreshToken);
+        const sessions = new SessionManager();
+
+        if (
+            !decodedToken?.userId ||
+            !sessions.getSession(decodedToken.userId) ||
+            tokenManager.isTokenExpired(decodedToken)
+        ) {
+            throw ApiErrorFactory.unauthorized();
+        }
+
+        const { accessToken } = sessions.refreshSession(userId);
+
+        res.status(200).json({accessToken})
+    } catch (e) {
+        res.status(401).json({ error: e.message });
     }
 
-    // const usersSession = UserSessionService.getInstance();
-    // Verify the refresh token and find the associated user
-    // const userId = usersSession.verifyUserByRefreshToken(refreshToken)
-
-    // if (!userId) {
-    //     return res.status(401).json({ error: 'Refresh token has expired' });
-    // }
-
-    // Generate a new access token and return it to the client
-    // const newAccessToken = usersSession.refreshUserAccessToken(userId);
-    res.json({ accessToken: null });
 });
 
 module.exports = router;

@@ -6,10 +6,12 @@ const mockCredentials = require('../__mocks__/user-credentials.json');
 const { REST_ENDPOINT } = require('../constants.js');
 const ApiErrorFactory = require('../../utils/ApiErrorFactory.js');
 const ApiSuccessFactory = require('../../utils/ApiSuccessFactory.js');
+const { USERS_REPO_NAME } = require('../../constants/repositoryNames.js');
+const mockUsersRepoName = USERS_REPO_NAME;
 
 jest.mock('../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((dataName) => {
-        if (dataName === 'users') {
+        if (dataName === mockUsersRepoName) {
             return mockUsers;
         }
 
@@ -59,7 +61,7 @@ describe('REST /login and /logout flow', () => {
         expect(loginResponse.body.error).toBeUndefined();
         expect(loginResponse.body.accessToken).toBeDefined();
         expect(loginResponse.body.refreshToken).toBeDefined();
-        
+
         const logoutResponse = await supertest(server).post(`${REST_ENDPOINT}/logout`)
             .set('Authorization', `Bearer ${loginResponse.body.refreshToken}`)
             .expect(401)

@@ -7,19 +7,17 @@ const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const SessionManager = require('../../../managers/SessionManager');
-const {TokenManager} = require('../../../managers/TokenManager');
-jest.mock('../../../managers/SessionManager');
-jest.mock('../../../managers/TokenManager');
-const { mockSessionForUser } = require('../../utils');
+const { USERS_REPO_NAME, PAGES_REPO_NAME } = require('../../../constants/repositoryNames');
 
-const ACCESS_TOKEN = 'access-token';
+const mockUsersRepoName = USERS_REPO_NAME;
+const mockPagesRepoName = PAGES_REPO_NAME;
 
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === 'users') {
+        if (name === mockUsersRepoName) {
             return Promise.resolve(mockUsers);
-        } else if (name === 'pages') {
+        } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
         }
     }),
@@ -34,6 +32,20 @@ describe('addPage mutation', () => {
     const MOCK_UNIQID = 'Pageuniqid';
     uniqid.mockReturnValue(MOCK_UNIQID);
     jest.spyOn(data, 'writeData').mockImplementation(mockWriteDataFn);
+    let userWithAccessToken, userWithoutAccessToken;
+    const session = new SessionManager();
+
+    beforeAll(() => {
+        const first = session.createSession(mockUsers[0].id);
+        const second = session.createSession(mockUsers[1].id);
+        userWithAccessToken = first.accessToken;
+        userWithoutAccessToken = second.accessToken;
+    });
+
+    afterAll(() => {
+        session.endSession(mockUsers[0].id);
+        session.endSession(mockUsers[1].id);
+    });
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -58,9 +70,8 @@ describe('addPage mutation', () => {
     });
 
     it('Should save data with proper values by user that has access and return it', async () => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
                     addPage(
@@ -118,9 +129,8 @@ describe('addPage mutation', () => {
     });
 
     it('Should create alias automatically when it is not provided', async () => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
                     addPage(
@@ -140,9 +150,8 @@ describe('addPage mutation', () => {
     });
 
     it('Should get Action forbidden error when action user has no access', async () => {
-        mockSessionForUser(mockUsers[1].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithoutAccessToken}`)
             .send({
                 query: `mutation {
                     addPage(
@@ -179,9 +188,8 @@ describe('addPage mutation', () => {
 
     it('Should get alias invalid error', async () => {
         const INVALID_ALIAS = "SOME ALIAs for a page  ";
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
                     addPage(
@@ -207,9 +215,8 @@ describe('addPage mutation', () => {
         ['not cebab case', '[""]', ApiErrorFactory.pagePathIsEmpty()],
         ['not cebab case', '["new", "page for", "you"]', ApiErrorFactory.pagePathIsNotValid()],
     ])('Should get %s error when path is %s', async (_, invalidPath, error) => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
                     addPage(
@@ -235,9 +242,8 @@ describe('addPage mutation', () => {
         ['   b'],
         ['    c  '],
     ])('Should get the short title error when title is "%s"', async (title) => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
                     addPage(

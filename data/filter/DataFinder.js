@@ -6,7 +6,7 @@ class DataFinder extends DataFilter {
     }
 
     find(data) {
-        return data.find((item) => this.matcher.isMatched(item));
+        return data.find((item) => this.matcher.isMatched(item)) ?? null;
     }
 }
 

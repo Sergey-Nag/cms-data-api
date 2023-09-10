@@ -17,8 +17,8 @@ class User extends CreatableModel {
         }, 'U');
 
         this.firstname = firstname;
-        this.lastname = lastname ?? null;
         this.email = email;
+        this.lastname = lastname ?? null;
         this.lastModifiedISO = lastModifiedISO ?? null;
 
         this.permissions = {

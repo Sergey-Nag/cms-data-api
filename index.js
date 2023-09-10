@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const schema = require('./schema');
 const swaggerConf = require('./swaggerConfig');
 const restApiRouter = require('./restApi');
+const { setup } = require('./data/setup');
 
 const { authenticateNotExpiredTokenMiddleware } = require('./middlewares/authenticateMiddleware');
 const app = express();
@@ -42,8 +43,11 @@ app.use('/graphql',
   })
 );
 
+
+
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
+  app.listen(PORT, async () => {
+    await setup();
     console.log(
       `
       Server is running on http://localhost:${PORT}

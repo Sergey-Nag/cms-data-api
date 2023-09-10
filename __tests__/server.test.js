@@ -4,16 +4,17 @@ const mockUsers = require('./__mocks__/users.json');
 const mockPages = require('./__mocks__/pages.json');
 const data = require('../data/index.js');
 const { GRAPH_ENDPOINT } = require('./constants.js');
-const SessionManager = require('../managers/SessionManager.js');
 const { mockSessionForUser, mockReadData } = require('./utils.js');
-jest.mock('../managers/SessionManager');
+const { USERS_REPO_NAME, PAGES_REPO_NAME } = require('../constants/repositoryNames.js');
 const ACCESS_TOKEN = 'access-token';
+const mockUsersRepoName = USERS_REPO_NAME;
+const mockPagesRepoName = PAGES_REPO_NAME
 
 jest.mock('../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === 'users') {
+        if (name === mockUsersRepoName) {
             return Promise.resolve(mockUsers);
-        } else if (name === 'pages') {
+        } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
         }
     }),
@@ -42,13 +43,13 @@ describe('Server', () => {
     });
 
     it.each([
-        'pages',
-        'users',
+        PAGES_REPO_NAME,
+        USERS_REPO_NAME,
     ])('Should read %p json data when requests API', async (name) => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
+        const {accessToken, endSession} = mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
 
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${accessToken}`)
             .send({
                 query: `
                     {
@@ -63,5 +64,6 @@ describe('Server', () => {
         expect(response.body.data[name]).toBeDefined();
 
         expect(data.readData).toHaveBeenCalledWith(name);
+        endSession();
     });
 });

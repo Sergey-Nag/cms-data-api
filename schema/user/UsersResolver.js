@@ -5,7 +5,7 @@ const UserRegistrationService = require('../../services/UserRegistrationService'
 const SessionManager = require('../../managers/SessionManager');
 
 class UserResolver {
-    static async get(parent, data,  { actionUser }) {
+    static async get(parent, data, { actionUser }) {
         const users = new UserRepository();
         await users.load();
 
@@ -17,7 +17,7 @@ class UserResolver {
         return user;
     }
 
-    static async add(parent, data, {actionUser}) {
+    static async add(parent, data, { actionUser }) {
         const users = new UserRepository();
         await users.load();
 
@@ -27,8 +27,9 @@ class UserResolver {
         UserValidator.validateDataToCreate(data);
 
         const addedUser = users.add(data, actionUser.id);
-        
-        const passw = await UserRegistrationService.createPasswordForUser(addedUser);
+        try {
+            const passw = await UserRegistrationService.createPasswordForUser(addedUser);
+        } catch (e) { console.log(e) }
         await users.save();
         return addedUser;
     }
@@ -62,7 +63,7 @@ class UserResolver {
         return updatedUser;
     }
 
-    static async delete(parent, { id }, {actionUser}) {
+    static async delete(parent, { id }, { actionUser }) {
         const users = new UserRepository();
         await users.load();
 
@@ -85,13 +86,13 @@ class UserResolver {
         return deletedUsers[0];
     }
 
-    static isOnline({id}) {
+    static isOnline({ id }) {
         const sesisonManager = new SessionManager()
         const session = sesisonManager.getSession(id);
-    
+
         if (!session) return false;
 
-        return sesisonManager.isSessionExpired(session);
+        return !sesisonManager.isSessionExpired(session);
     }
 }
 

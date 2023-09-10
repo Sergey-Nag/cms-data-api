@@ -1,8 +1,9 @@
+const { USERS_REPO_NAME } = require('../constants/repositoryNames');
 const { readData } = require('../data/index');
 const ApiErrorFactory = require('../utils/ApiErrorFactory');
 
 const loadUserById = async (id) => {
-    const users = await readData('users');
+    const users = await readData(USERS_REPO_NAME);
     return users.find((user) => user.id === id);
 }
 

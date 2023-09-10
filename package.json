@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "cross-env ADMIN_PASSWORD=admin node index.js",
+    "start:dev": "cross-env NODE_ENV=development node index.js",
     "dev": "nodemon index.js",
     "test": "cross-env NODE_ENV=test jest --testTimeout=10000",
     "test:watch": "npm run test -- --watchAll --verbose"
@@ -14,6 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",

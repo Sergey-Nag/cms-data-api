@@ -7,19 +7,17 @@ const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const { expectPageData } = require('../utils');
-const { merge } = require('lodash');
 const SessionManager = require('../../../managers/SessionManager');
-jest.mock('../../../managers/SessionManager');
-const { mockSessionForUser } = require('../../utils');
-
-const ACCESS_TOKEN = 'delete-page-access-token';
+const { USERS_REPO_NAME, PAGES_REPO_NAME } = require('../../../constants/repositoryNames');
+const mockUsersRepoName = USERS_REPO_NAME;
+const mockPagesRepoName = PAGES_REPO_NAME;
 
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === 'users') {
+        if (name === mockUsersRepoName) {
             return Promise.resolve(mockUsers);
-        } else if (name === 'pages') {
+        } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
         }
     }),
@@ -32,15 +30,29 @@ describe('deleteUser mutation', () => {
     uniqid.mockReturnValue(MOCK_UNIQID);
     jest.spyOn(data, 'writeData').mockImplementation(mockWriteDataFn);
 
+    let userWithAccessToken, userWithoutAccessToken;
+    const session = new SessionManager();
+
+    beforeAll(() => {
+        const first = session.createSession(mockUsers[0].id);
+        const second = session.createSession(mockUsers[1].id);
+        userWithAccessToken = first.accessToken;
+        userWithoutAccessToken = second.accessToken;
+    });
+
+    afterAll(() => {
+        session.endSession(mockUsers[0].id);
+        session.endSession(mockUsers[1].id);
+    });
+
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     it('Should delete page by user that has access and return it', async () => {
         const deletePage = {...mockPages.at(-1)};
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
                     deletePage(
@@ -67,15 +79,14 @@ describe('deleteUser mutation', () => {
 
         expectPageData(response.body.data.deletePage, deletePage);
         expect(mockPages).not.toContainEqual(deletePage);
-        expect(mockWriteDataFn).toHaveBeenCalledWith('pages', mockPages);
+        expect(mockWriteDataFn).toHaveBeenCalledWith(PAGES_REPO_NAME, mockPages);
     });
 
     it('Should get Action forbidden error when action user has no access', async () => {
         const notDeletedPage = {...mockPages.at(-1)};
         
-        mockSessionForUser(mockUsers[1].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithoutAccessToken}`)
             .send({
                 query: `mutation {
                     deletePage(
@@ -95,9 +106,8 @@ describe('deleteUser mutation', () => {
     });
 
     it('Should get Page not found error with wrong id', async () => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
                     deletePage(

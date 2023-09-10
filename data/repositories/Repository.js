@@ -13,7 +13,7 @@ class Repository {
         return this.#filter(queryData);
     }
     get(queryData) {
-        if (isEmpty(queryData)) return false;
+        if (isEmpty(queryData)) return null;
         return this.#find(queryData);
     }
     add(data) {
@@ -23,7 +23,7 @@ class Repository {
     delete(id) {
         const index = this.data.findIndex(data => data.id === id);
 
-        if (index === -1) return false;
+        if (index === -1) return null;
 
         const deletedData = this.data.splice(index, 1);
         return deletedData;

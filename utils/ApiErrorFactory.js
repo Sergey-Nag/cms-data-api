@@ -37,7 +37,7 @@ module.exports = class ApiErrorFactory {
         return new Error('Invalid email format!');
     }
     static userPasswordInvalid() {
-        return new Error('Pasword is to short!');
+        return new Error('Pasword invalid!');
     }
     static tokenInvalid(message) {
         return new Error(`Invalid token!${message ? ' '+message : ''}`);
@@ -59,5 +59,8 @@ module.exports = class ApiErrorFactory {
     }
     static sessionExpired() {
         return new Error('Session is expired!');
+    }
+    static dataNotProvided() {
+        return new Error('Data was not provided');
     }
 }

@@ -7,11 +7,12 @@ const { REST_ENDPOINT } = require('../constants.js');
 const ApiErrorFactory = require('../../utils/ApiErrorFactory.js');
 const SessionManager = require('../../managers/SessionManager.js');
 const ApiSuccessFactory = require('../../utils/ApiSuccessFactory.js');
-const { TokenManager } = require('../../managers/TokenManager.js');
+const { USERS_REPO_NAME } = require('../../constants/repositoryNames.js');
+const mockUsersRepoName = USERS_REPO_NAME;
 
 jest.mock('../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((dataName) => {
-        if (dataName === 'users') {
+        if (dataName === mockUsersRepoName) {
             return mockUsers;
         }
 
@@ -20,26 +21,28 @@ jest.mock('../../data/index.js', () => ({
     writeData: jest.fn((data) => data),
 }));
 
-jest.mock('../../managers/SessionManager.js');
-jest.mock('../../managers/TokenManager.js');
 
 const apiEndpoint = `${REST_ENDPOINT}/logout`;
 
 describe('REST /logout', () => {
     const mockFn = jest.fn();
-
+    let session;
+    beforeEach(() => {
+        const sessions = new SessionManager();
+        session = sessions.createSession(mockUsers[0].id);
+    });
     afterEach(() => {
+        const sessions = new SessionManager();
+        sessions.endSession(mockUsers[0].id);
+    
         jest.clearAllMocks();
     });
 
     it('Should get Unauthorized error if call without Authorization header', async () => {
-        jest.spyOn(SessionManager.prototype, 'endSession').mockImplementation(mockFn);
-
         const response = await supertest(server).post(apiEndpoint)
             .expect(401);
 
         expect(response.body.error).toBe(ApiErrorFactory.authorizationTokenWasntProvided().message);
-        expect(mockFn).not.toHaveBeenCalledWith(mockUsers[0].id);
     });
 
     it.each([
@@ -53,8 +56,6 @@ describe('REST /logout', () => {
             'Unauthorized with wrong Bearer', `Bearer 123`, ApiErrorFactory.unauthorized(),
         ],
     ])('Should get error: %s ', async (_name, token, error) => {
-        jest.spyOn(SessionManager.prototype, 'endSession').mockImplementation(mockFn);
-
         const response = await supertest(server).post(apiEndpoint)
             .set('Authorization', token)
             .expect(401);
@@ -65,25 +66,12 @@ describe('REST /logout', () => {
 
     it('Should successfully logout authenticated user', async () => {
         const userId = mockUsers[0].id;
-        const accessToken = 'access-user-token';
-
-        const mockVerifyToken = jest.fn((token) => {
-            if (token === accessToken) {
-                return { userId };
-            }
-            throw ApiErrorFactory.tokenExpired();
-        });
-        const mockGetSession = jest.fn((id) => id === userId);
-
-        jest.spyOn(TokenManager.prototype, 'verifyAccessToken').mockImplementation(mockVerifyToken);
-        jest.spyOn(SessionManager.prototype, 'getSession').mockImplementation(mockGetSession);
+        const accessToken = session.accessToken;
 
         const response = await supertest(server).post(apiEndpoint)
             .set('Authorization', `Bearer ${accessToken}`)
             .expect(200);
             
-        expect(mockVerifyToken).toHaveBeenCalledWith(accessToken);
-        expect(mockGetSession).toHaveBeenCalledWith(userId);
         expect(response.body.error).toBeUndefined();
         expect(response.body.message).toBe(ApiSuccessFactory.loggerOut());
     });

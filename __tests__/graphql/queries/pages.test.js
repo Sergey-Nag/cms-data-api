@@ -5,18 +5,17 @@ const server = require('../../../index');
 const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
-
-const SessionManager = require('../../../managers/SessionManager');
 const { mockSessionForUser } = require('../../utils');
-jest.mock('../../../managers/SessionManager');
+const { USERS_REPO_NAME, PAGES_REPO_NAME } = require('../../../constants/repositoryNames');
 
-const ACCESS_TOKEN = 'pages-access-token';
+const mockUsersRepoName = USERS_REPO_NAME;
+const mockPagesRepoName = PAGES_REPO_NAME;
 
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === 'users') {
+        if (name === mockUsersRepoName) {
             return Promise.resolve(mockUsers);
-        } else if (name === 'pages') {
+        } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
         }
     }),
@@ -69,9 +68,9 @@ describe('pages query', () => {
     });
 
     it('Should get list of pages when action user has access', async () => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
+        const {accessToken, endSession} = mockSessionForUser(mockUsers[0].id);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${accessToken}`)
             .send({
                 query: `
                 {
@@ -108,12 +107,13 @@ describe('pages query', () => {
             } 
         });
         expect(response.body.data.pages).toEqual(expectedMap);
+        endSession();
     });
 
     it('Should get Action forbidden error when action user has no access', async () => {
-        mockSessionForUser(mockUsers[1].id, ACCESS_TOKEN);
+        const {accessToken, endSession} = mockSessionForUser(mockUsers[1].id);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${accessToken}`)
             .send({
                 query: `
                 {
@@ -127,6 +127,7 @@ describe('pages query', () => {
         expect(response.body.data.pages).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.actionForbidden().message);
+        endSession();
     });
 
     it('Should get an empty array when pages are not found', async () => {

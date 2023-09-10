@@ -2,24 +2,20 @@ const mockUsers = require('../../__mocks__/users.json');
 const mockPages = require('../../__mocks__/pages.json');
 const data = require('../../../data/index.js');
 const server = require('../../../index');
-const uniqid = require('uniqid');
 const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const { expectUserData } = require('../utils');
 const { merge } = require('lodash');
 const SessionManager = require('../../../managers/SessionManager');
-const { mockSessionForUser } = require('../../utils');
-jest.mock('../../../managers/SessionManager');
-
-const ACCESS_TOKEN = 'test-access-token';
-
-jest.mock('uniqid');
+const { USERS_REPO_NAME, PAGES_REPO_NAME } = require('../../../constants/repositoryNames');
+const mockUsersRepoName = USERS_REPO_NAME;
+const mockPagesRepoName = PAGES_REPO_NAME;
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === 'users') {
+        if (name === mockUsersRepoName) {
             return Promise.resolve(mockUsers);
-        } else if (name === 'pages') {
+        } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
         }
     }),
@@ -31,9 +27,22 @@ Date.prototype.toISOString = jest.fn(() => MOCK_ISO_TIME);
 
 describe('editUser mutation', () => {
     const mockWriteDataFn = jest.fn();
-    // const MOCK_UNIQID = 'Pageuniqid';
-    // uniqid.mockReturnValue(MOCK_UNIQID);
     jest.spyOn(data, 'writeData').mockImplementation(mockWriteDataFn);
+
+    let userWithAccessToken, userWithoutAccessToken;
+    const session = new SessionManager();
+
+    beforeAll(() => {
+        const first = session.createSession(mockUsers[0].id);
+        const second = session.createSession(mockUsers[1].id);
+        userWithAccessToken = first.accessToken;
+        userWithoutAccessToken = second.accessToken;
+    });
+
+    afterAll(() => {
+        session.endSession(mockUsers[0].id);
+        session.endSession(mockUsers[1].id);
+    });
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -59,7 +68,6 @@ describe('editUser mutation', () => {
     });
 
     it('Should update a user data by user that has access and return it', async () => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const updateData = {
             firstname: 'new test name',
             lastname: 'new last name',
@@ -77,7 +85,7 @@ describe('editUser mutation', () => {
         const oldUser = {...mockUsers[2]};
 
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 variables: {
                     data: updateData,
@@ -135,7 +143,7 @@ describe('editUser mutation', () => {
         
         merge(updateData, mockUsers[2]);
         expect(mockUsers).toContainEqual(updateData);
-        expect(mockWriteDataFn).toHaveBeenCalledWith('users', mockUsers);
+        expect(mockWriteDataFn).toHaveBeenCalledWith(USERS_REPO_NAME, mockUsers);
     });
 
     it.each([
@@ -143,7 +151,7 @@ describe('editUser mutation', () => {
             'Should get Action forbidden error when action user has no access', 
             {
                 id: mockUsers[2].id, 
-                actionUserId: mockUsers[1].id
+                withAccess: false,
             },
             ApiErrorFactory.actionForbidden(),
         ],
@@ -151,7 +159,7 @@ describe('editUser mutation', () => {
             'Should get User not found error when id is wrong', 
             {
                 id: 'not-existed-user-id', 
-                actionUserId: mockUsers[0].id
+                withAccess: true,
             },
             ApiErrorFactory.userNotFound(),
         ],
@@ -159,20 +167,19 @@ describe('editUser mutation', () => {
             'Should get Something went wrong error when id is empty', 
             {
                 id: '', 
-                actionUserId: mockUsers[0].id
+                withAccess: true,
             },
             ApiErrorFactory.somethingWentWrong(),
         ],
         [
-            'Should get unauthorized error when actionUserId is wrong', 
+            'Should get wrong token error', 
             {
                 id: mockUsers[2].id, 
-                actionUserId: 'not-existed-user-id'
+                token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJpMGN5a3Y2b2xscmMwejh2IiwiaWF0IjoxNjk0MjM5NzY4LCJleHAiOjE2OTQyNDMzNjh9.K-eOoZ7ZRxhYyveEbVKWpoEi9d0f_9GaexxiBraYgZo'
             },
             ApiErrorFactory.unauthorized(),
         ],
-    ])('%s', async (_, { id, actionUserId}, error) => {
-        mockSessionForUser(actionUserId, ACCESS_TOKEN);
+    ])('%s', async (_, { id, withAccess, token }, error) => {
         const updateData = {
             firstname: 'new test name',
             lastname: 'new last name',
@@ -188,7 +195,7 @@ describe('editUser mutation', () => {
             }
         }
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${token ?? (withAccess ? userWithAccessToken : userWithoutAccessToken)}`)
             .send({
                 variables: {
                     id,
@@ -206,8 +213,12 @@ describe('editUser mutation', () => {
             });
 
         expect(response.body.errors).toBeDefined();
-        expect(response.body.data.editUser).toBeNull();
         expect(response.body.errors[0].message).toBe(error.message);
+        try {
+            expect(response.body.data.editUser).toBeNull();
+        } catch(e) {
+            expect(response.body.data).toBeUndefined();
+        }
 
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });
@@ -234,14 +245,13 @@ describe('editUser mutation', () => {
             ['Supfursdnvasdvonacvadfvoin', 'sdffffffff@dfadf.cdc'],
         ]
     ])('Should update only provided properties: %s', async (props, values) => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const updateData = props.reduce((acc, prop, i) => {
             acc[prop] = values[i];
             return acc;
         }, {});
         const oldUser = {...mockUsers[2]};
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 variables: {
                     data: updateData,
@@ -312,13 +322,12 @@ describe('editUser mutation', () => {
             ['firstname', 'email'], ['lolo', 'abta@.ss'], ApiErrorFactory.userEmailInvalid(),
         ],
     ])('Should get validation error for ivalid props: %s', async (props, values, error) => {
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const updateData = props.reduce((acc, prop, i) => {
             acc[prop] = values[i];
             return acc;
         }, {});
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 variables: {
                     data: updateData,

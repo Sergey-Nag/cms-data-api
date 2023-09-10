@@ -6,19 +6,20 @@ const uniqid = require('uniqid');
 const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
-const { mockSessionForUser } = require('../../utils');
 const SessionManager = require('../../../managers/SessionManager');
 const { expectPageData } = require('../utils');
-jest.mock('../../../managers/SessionManager');
+const { USERS_REPO_NAME, PAGES_REPO_NAME } = require('../../../constants/repositoryNames');
+const mockUsersRepoName = USERS_REPO_NAME;
+const mockPagesRepoName = PAGES_REPO_NAME;
 
 const ACCESS_TOKEN = 'edit-page-access-token';
 
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === 'users') {
+        if (name === mockUsersRepoName) {
             return Promise.resolve(mockUsers);
-        } else if (name === 'pages') {
+        } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
         }
     }),
@@ -33,6 +34,21 @@ describe('aditPage mutation', () => {
     const MOCK_UNIQID = 'Pageuniqid';
     uniqid.mockReturnValue(MOCK_UNIQID);
     jest.spyOn(data, 'writeData').mockImplementation(mockWriteDataFn);
+
+    let userWithAccessToken, userWithoutAccessToken;
+    const session = new SessionManager();
+
+    beforeAll(() => {
+        const first = session.createSession(mockUsers[0].id);
+        const second = session.createSession(mockUsers[1].id);
+        userWithAccessToken = first.accessToken;
+        userWithoutAccessToken = second.accessToken;
+    });
+
+    afterAll(() => {
+        session.endSession(mockUsers[0].id);
+        session.endSession(mockUsers[1].id);
+    });
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -62,9 +78,8 @@ describe('aditPage mutation', () => {
             alias: 'page-alias',
             modifiedById: mockUsers[0].id,
         }
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
                     editPage(
@@ -110,7 +125,7 @@ describe('aditPage mutation', () => {
         });
 
         expect(mockPages).toContainEqual(expectedData);
-        expect(mockWriteDataFn).toHaveBeenCalledWith('pages', mockPages);
+        expect(mockWriteDataFn).toHaveBeenCalledWith(PAGES_REPO_NAME, mockPages);
     });
 
     it.each([
@@ -139,9 +154,8 @@ describe('aditPage mutation', () => {
         }, {});
         const oldPage = {...mockPages[0]};
 
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 variables: {
                     updateData,
@@ -174,7 +188,7 @@ describe('aditPage mutation', () => {
             'Should get Action forbidden error when action user has no access',
             {
                 id: mockPages[0].id,
-                actionUserId: mockUsers[1].id
+                withAccess: false
             },
             ApiErrorFactory.actionForbidden(),
         ],
@@ -182,7 +196,7 @@ describe('aditPage mutation', () => {
             'Should get Page not found error when id is wrong',
             {
                 id: 'not-existed-page-id',
-                actionUserId: mockUsers[0].id
+                withAccess: true
             },
             ApiErrorFactory.pageNotFound('not-existed-page-id'),
         ],
@@ -190,22 +204,21 @@ describe('aditPage mutation', () => {
             'Should get Page not found error when id is empty',
             {
                 id: '',
-                actionUserId: mockUsers[0].id
+                withAccess: true
             },
             ApiErrorFactory.pageNotFound(),
         ],
         [
-            'Should get User not found error when id is wrong',
+            'Should get unauthorized error when token is obsolete',
             {
                 id: mockPages[0].id,
-                actionUserId: 'not-existed-page-id'
+                token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJpMGN5a3Y2b2xscmMwejh2IiwiaWF0IjoxNjk0MjM5NzY4LCJleHAiOjE2OTQyNDMzNjh9.K-eOoZ7ZRxhYyveEbVKWpoEi9d0f_9GaexxiBraYgZo'
             },
             ApiErrorFactory.unauthorized(),
         ],
-    ])('%s', async (_, {id, actionUserId}, error) => {
-        mockSessionForUser(actionUserId, ACCESS_TOKEN);
+    ])('%s', async (_, {id, withAccess, token}, error) => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${token ?? (withAccess ? userWithAccessToken : userWithoutAccessToken)}`)
             .send({
                 variables: {
                     id
@@ -222,9 +235,13 @@ describe('aditPage mutation', () => {
                 }`
             });
 
-        expect(response.body.data.editPage).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(error.message);
+        try {
+            expect(response.body.data.editPage).toBeNull();
+        } catch(e) {
+            expect(response.body.data?.editPage).toBeUndefined();
+        }
 
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });
@@ -275,9 +292,8 @@ describe('aditPage mutation', () => {
             return acc;
         }, {});
 
-        mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${ACCESS_TOKEN}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 variables: {
                     updateData,

@@ -2,15 +2,22 @@ const UserCredentialsRepository = require('../data/repositories/UserCredentialsR
 const { UserRepository } = require('../data/repositories');
 const ApiErrorFactory = require('../utils/ApiErrorFactory');
 const isEmailValid = require('../utils/isEmailValid');
+const { ADMIN_EMAIL } = require('../constants/env');
+const { PASSWORD_VALIDATION_REGEXP } = require('../constants/regExps');
 
 module.exports = class UserAuthenticationService {
     static #validateEmail(email) {
+        if (email === ADMIN_EMAIL) return;
+
         if (typeof email !== 'string' || !isEmailValid(email)) {
             throw ApiErrorFactory.userEmailInvalid()
         }
     }
     static #validatePasword(password) {
-        if (typeof password !== 'string' || password.length < 2) {
+        if (
+            typeof password !== 'string' ||
+            !PASSWORD_VALIDATION_REGEXP.test(password)
+        ) {
             throw ApiErrorFactory.userPasswordInvalid();
         }
     }
@@ -54,5 +61,15 @@ module.exports = class UserAuthenticationService {
         if (!user) {
             throw ApiErrorFactory.userNotFound(userId);
         }
+    }
+    static async updatePassword(userId, newPassword) {
+        this.#validatePasword(newPassword);
+        const credsRepo = new UserCredentialsRepository();
+        await credsRepo.load();
+        
+        const updated = await credsRepo.editAsync(userId, newPassword);
+        
+        await credsRepo.save();
+        return !!updated;
     }
 }

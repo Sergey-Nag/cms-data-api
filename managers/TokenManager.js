@@ -1,11 +1,11 @@
 const jwt = require('jsonwebtoken');
 const ApiErrorFactory = require('../utils/ApiErrorFactory');
-
-const SECRET_ACCESS_TOKEN = process.env.SECRET_ACCESS_TOKEN ?? 'secret-access-token';
-const SECRET_REFRESH_TOKEN = process.env.SECRET_REFRESH_TOKEN ?? 'secret-refresh-token';
-
-const SECRET_ACCESS_TIME = process.env.SECRET_ACCESS_TIME ?? '1h';
-const SECRET_REFRESH_TIME = process.env.SECRET_REFRESH_TIME ?? '2h';
+const { 
+    SECRET_ACCESS_TOKEN,
+    SECRET_ACCESS_TIME,
+    SECRET_REFRESH_TOKEN,
+    SECRET_REFRESH_TIME
+} = require('../constants/env');
 
 class TokenManager {
     constructor() { }
@@ -42,7 +42,16 @@ class TokenManager {
 
             return decoded;
         } catch (e) {
-            throw ApiErrorFactory.tokenInvalid(e?.message);
+            throw ApiErrorFactory.unauthorized();
+        }
+    }
+
+    decodeToken(token) {
+        try {
+            const decoded = jwt.decode(token)
+            return decoded;
+        } catch(e) {
+            console.log(e);
         }
     }
 }

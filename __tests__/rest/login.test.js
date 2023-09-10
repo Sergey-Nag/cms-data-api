@@ -6,10 +6,11 @@ const mockCredentials = require('../__mocks__/user-credentials.json');
 const { REST_ENDPOINT } = require('../constants.js');
 const ApiErrorFactory = require('../../utils/ApiErrorFactory.js');
 const SessionManager = require('../../managers/SessionManager.js');
-
+const { USERS_REPO_NAME } = require('../../constants/repositoryNames.js');
+const mockUsersRepoName = USERS_REPO_NAME;
 jest.mock('../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((dataName) => {
-        if (dataName === 'users') {
+        if (dataName === mockUsersRepoName) {
             return mockUsers;
         }
 

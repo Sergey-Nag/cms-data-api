@@ -15,7 +15,7 @@ function authenticateMiddleware(req, res, next) {
         try {
             const usersSession = new SessionManager();
             const tokenManager = new TokenManager();
-            const userData = tokenManager.verifyAccessToken(token);
+            const userData = tokenManager.decodeToken(token);
 
             if (!usersSession.getSession(userData?.userId)) {
                 req.userId = null;
@@ -32,6 +32,32 @@ function authenticateMiddleware(req, res, next) {
     next();
 };
 
+function accessTokenOnlyMiddleware(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+        try {
+            const usersSession = new SessionManager();
+            const tokenManager = new TokenManager();
+            const userData = tokenManager.verifyAccessToken(token);
+
+            if (!usersSession.getSession(userData?.userId)) {
+                req.userId = null;
+            } else {
+                req.userId = userData?.userId;
+            }
+        } catch (error) {
+            // Token verification failed
+            // console.log(error);
+            req.userId = null;
+        }
+    }
+
+    next();
+}
+
 /**
  * If token exists and it's expired should return 401 an error.
  */
@@ -47,7 +73,7 @@ async function authenticateNotExpiredTokenMiddleware(req, res, next) {
             const decodedUserData = tokenManager.verifyAccessToken(token);
             
             if (!usersSession.getSession(decodedUserData.userId)) {
-                throw ApiErrorFactory.tokenObsolete();
+                throw ApiErrorFactory.unauthorized();
             }
 
             const usersRepo = new UserRepository();
@@ -77,5 +103,6 @@ function authenticateRequiredMiddleware(req, res, next) {
 module.exports = {
     authenticateMiddleware,
     authenticateRequiredMiddleware,
+    accessTokenOnlyMiddleware,
     authenticateNotExpiredTokenMiddleware
 }
