@@ -1,56 +1,42 @@
-const { GraphQLString, GraphQLNonNull, GraphQLList, GraphQLInputObjectType } = require('graphql');
+const { GraphQLString, GraphQLNonNull, GraphQLList, GraphQLInputObjectType, GraphQLID } = require('graphql');
 const {PageType} = require('./type');
 const PagesResolver = require('./PagesResolver');
 const { authProtect } = require('../utils');
 const { addPageProtect, editPageProtect } = require('./mutationProtection');
+const { NewPageInput, EditPageInput } = require('./mutationArgs');
 
-const editFields = {
-    path: { type: new GraphQLList(GraphQLString) },
-    alias: { type: GraphQLString },
-    title: { type: GraphQLString },
-    // content: { type: new GraphQLList(GraphQLString) }
-}
 
-const EditPageInput = new GraphQLInputObjectType({
-    name: 'EditPageInput',
-    fields: {
-        path: { type: new GraphQLList(GraphQLString) },
-        alias: { type: GraphQLString },
-        title: { type: GraphQLString },
-    },
-});
+const pagesResolver = new PagesResolver();
 
 /** @type {import('graphql/type/definition').GraphQLFieldConfigMap} */
 module.exports = {
     editPage: {
         type: PageType,
         args: {
-            id: { type: new GraphQLNonNull(GraphQLString) },
-            data: {
+            id: { type: new GraphQLNonNull(GraphQLID) },
+            input: {
                 type: new GraphQLNonNull(EditPageInput),
-                args: editFields
             }
         },
-        resolve: authProtect(editPageProtect(PagesResolver.edit)),
+        resolve: pagesResolver.edit.bind(pagesResolver),
+        // resolve: authProtect(editPageProtect(PagesResolver.edit)),
     },
     addPage: {
         type: PageType,
         args: {
-            path: { 
-                type: new GraphQLNonNull(GraphQLList(GraphQLString))
-            },
-            title: { type: new GraphQLNonNull(GraphQLString) },
-            alias: { 
-                type: GraphQLString 
+            input: {
+                type: GraphQLNonNull(NewPageInput)
             },
         },
-        resolve: authProtect(addPageProtect(PagesResolver.add)),
+        resolve: pagesResolver.add.bind(pagesResolver)
+        // resolve: authProtect(addPageProtect(PagesResolver.add)),
     },
     deletePage: {
         type: PageType,
         args: {
-            id: { type: new GraphQLNonNull(GraphQLString) },
+            id: { type: new GraphQLNonNull(GraphQLID) },
         },
-        resolve: authProtect(PagesResolver.delete)
+        resolve: pagesResolver.delete.bind(pagesResolver)
+        // resolve: authProtect(PagesResolver.delete)
     }
 }

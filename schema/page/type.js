@@ -1,6 +1,8 @@
 const { GraphQLObjectType, GraphQLString, GraphQLList } = require('graphql');
 const {AdminType} = require('../user/type');
-const PagesResolver = require('./PagesResolver');
+const AdminsResolver = require('../user/AdminsResolver');
+
+const adminsResolver = new AdminsResolver();
 
 const PageType = new GraphQLObjectType({
     name: 'Page',
@@ -12,11 +14,31 @@ const PageType = new GraphQLObjectType({
         createdISO: { type: GraphQLString },
         createdBy: {
             type: AdminType,
-            resolve: PagesResolver.createdBy
+            resolve: async ({ createdById }, args, context) => {
+                return createdById && await adminsResolver.get(
+                    null, 
+                    { 
+                        find: { 
+                            id: createdById 
+                        } 
+                    },
+                    context
+                );
+            }
         },
         modifiedBy: {
             type: AdminType,
-            resolve: PagesResolver.modifiedBy
+            resolve: async ({ modifiedById }, args, context) => {
+                return modifiedById && await adminsResolver.get(
+                    null, 
+                    { 
+                        find: { 
+                            id: modifiedById 
+                        } 
+                    },
+                    context
+                );
+            }
         },
         lastModifiedISO: { type: GraphQLString },
         content: { type: new GraphQLList(GraphQLString) }

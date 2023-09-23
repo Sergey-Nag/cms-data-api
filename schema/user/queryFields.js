@@ -18,7 +18,6 @@ const queryFields = {
     }
 }
 
-
 const adminsResolver = new AdminsResolver();
 
 /** @type {import('graphql/type/definition').GraphQLFieldConfigMap} */

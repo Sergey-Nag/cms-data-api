@@ -1,5 +1,4 @@
 const { GraphQLObjectType, GraphQLString, GraphQLBoolean, GraphQLEnumType, GraphQLInputObjectType, GraphQLID } = require('graphql');
-const UsersResolver = require('./UsersResolver');
 const { DEFAULT_PERMISSIONS } = require('../../constants/defaults');
 const AdminsResolver = require('./AdminsResolver');
 
@@ -12,7 +11,6 @@ const AdminPagesRights = new GraphQLObjectType({
         return acc;
     }, {})
 });
-
 
 const UserPermissions = new GraphQLObjectType({
     name: 'UserPermissions',

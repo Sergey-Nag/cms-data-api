@@ -33,7 +33,7 @@ module.exports = {
     deleteAdmin: {
         type: AdminType,
         args: {
-            id: { type: new GraphQLNonNull(GraphQLString) },
+            id: { type: new GraphQLNonNull(GraphQLID) },
         },
         resolve: adminsResolver.delete.bind(adminsResolver)
         // resolve: authProtect(UserResolver.delete),

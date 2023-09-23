@@ -5,6 +5,9 @@ const ApiErrorFactory = require("../utils/ApiErrorFactory");
 const { ADMIN_PASSWORD, ADMIN_ID, ADMIN_EMAIL } = require('../constants/env');
 const User = require('../data/models/users/User');
 const { PASSWORD_VALIDATION_REGEXP } = require('../constants/regexp');
+const Repository = require('../data/repositories/Repository');
+const { ADMINS_REPO_NAME } = require('../constants/repositoryNames');
+const Admin = require('../data/models/users/Admin');
 
 class UserRegistrationService {
     static generatePassword() {
@@ -35,20 +38,18 @@ class UserRegistrationService {
         return password;
     }
     static async isAdminUserExist() {
-        const usersRepo = new UserRepository();
-        await usersRepo.load();
+        const repo = new Repository(ADMINS_REPO_NAME);
+        await repo.load();
 
-        const admin = usersRepo.get({ id: ADMIN_ID, });
+        const admin = repo.data.find(({ id }) => id === ADMIN_ID );
 
         return !!admin;
     }
     static async createAdminUser() {
-        const usersRepo = new UserRepository();
-        const credsRepo = new UserCredentialsRepository();
-        await usersRepo.load();
-        await credsRepo.load();
+        const repo = new Repository(ADMINS_REPO_NAME);
+        await repo.load();
 
-        const admin = new User({
+        const admin = new Admin({
             id: ADMIN_ID,
             firstname: 'Admin',
             email: ADMIN_EMAIL,
@@ -57,32 +58,34 @@ class UserRegistrationService {
                     analytics: true,
                     pages: true,
                     products: true,
-                    users: true,
+                    admins: true,
+                    customers: true,
                     orders: true,
                 },
                 canEdit: {
                     analytics: true,
                     pages: true,
                     products: true,
-                    users: true,
+                    admins: true,
+                    customers: true,
                     orders: true,
                 },
                 canDelete: {
                     analytics: true,
                     pages: true,
                     products: true,
-                    users: true,
+                    admins: true,
+                    customers: true,
                     orders: true,
                 },
             }
         });
 
-        usersRepo.data.unshift(admin);
+        repo.data.unshift(admin);
 
-        await credsRepo.addAsync(admin, ADMIN_PASSWORD);
+        await admin.setPassword(ADMIN_PASSWORD);
 
-        await usersRepo.save();
-        await credsRepo.save();
+        await repo.save();
     }
 }
 

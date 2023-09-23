@@ -34,6 +34,10 @@ class UserValidator {
         }
     }
 
+    static dataNotFound() {
+        throw ApiErrorFactory.userNotFound();
+    }
+
     constructor(user, dest) {
         if (!user) {
             throw ApiErrorFactory.userNotFound();

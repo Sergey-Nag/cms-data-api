@@ -12,9 +12,9 @@ class DataResolver {
     async getAll(parent, { filter, sort, pagination } = {}, context) {
         await this.repository.load();
         const dataMutation = new DataMutations({ filter, sort, pagination }, true);
-        
+        console.log(this.repository);
         const allData = this.repository
-            .getAll()
+            .data
             .map((data) => new this.model(data));
 
         const result = dataMutation.mutate(allData);
@@ -41,14 +41,14 @@ class DataResolver {
         return null;
     }
 
-    async add(parent, { input } = {}, context) {
+    async add(parent, { input } = {}, {actionUser} = {}) {
         this.validator.validateDataToCreate(input);
         await this.repository.load();
 
         // new UserValidator(actionUser)
         //     .canEdit('users');
 
-        const newData = new this.model(input, context?.actionUserId);
+        const newData = new this.model({...input, createdById: actionUser?.id });
         const addedData = this.repository.add(newData);
         
         await this.repository.save();
@@ -79,7 +79,7 @@ class DataResolver {
         const result = this.repository.delete(id);
 
         if (!result) {
-            throw ApiErrorFactory.userNotFound();
+            this.validator.dataNotFound();
         }
 
         await this.repository.save();

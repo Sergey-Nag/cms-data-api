@@ -43,6 +43,10 @@ class PageValidatior {
             throw ApiErrorFactory.pagePathIsNotValid();
         }
     }
+
+    static dataNotFound() {
+        throw ApiErrorFactory.pageNotFound();
+    }
 }
 
 module.exports = PageValidatior;

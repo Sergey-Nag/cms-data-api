@@ -13,15 +13,15 @@ class DataMutations {
         let mutatedData = data;
         
         if (this.filtering) {
-            mutatedData = this.filtering.filter(data);
+            mutatedData = this.filtering.filter(mutatedData);
         }
 
         if (this.sorting) {
-            mutatedData = this.sorting.sort(data);
+            mutatedData = this.sorting.sort(mutatedData);
         }
 
         if (this.pagination) {
-            mutatedData = this.pagination.paginate(data);
+            mutatedData = this.pagination.paginate(mutatedData);
         }
 
         return mutatedData;

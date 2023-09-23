@@ -1,15 +1,9 @@
 const kebabCase = require('lodash/kebabCase');
-const ModifiableModel = require('../baseModels/ModifiableModel');
+const UserEditableModel = require('../baseModels/UserEditableModel');
 
-class Page extends ModifiableModel {
-    constructor({ id, path, alias, title, createdISO, createdById, modifiedById, lastModifiedISO, contentId }, createdByIdInitial) {
-        super({
-            id, 
-            createdISO, 
-            createdById: createdByIdInitial ?? createdById, 
-            modifiedById, 
-            lastModifiedISO
-        }, 'P');
+class Page extends UserEditableModel {
+    constructor({ path, alias, title, contentId, ...data }) {
+        super(data, 'P');
 
         this.path = path ?? null;
         this.alias = alias ?? kebabCase(title);
