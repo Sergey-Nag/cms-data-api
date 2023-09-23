@@ -1,56 +1,41 @@
-const { GraphQLString, GraphQLNonNull,GraphQLList, GraphQLInputObjectType, GraphQLBoolean } = require('graphql');
-const { UserType, AdminPagesRights, UserPermissionsInput } = require('./type');
-const UserResolver = require('./UsersResolver');
+const { GraphQLString, GraphQLNonNull, GraphQLID } = require('graphql');
+const { AdminType } = require('./type');
 const { authProtect } = require('../utils');
 const { addUserProtect, editUserProtect } = require('./mutationProtections');
+const AdminsResolver = require('./AdminsResolver');
+const { NewAdminInput, EditAdminInput } = require('./mutationArgs');
 
-const userEditableFields = {
-    firstname: { type: GraphQLString },
-    lastname: { type: GraphQLString },
-    email: { type: GraphQLString },
-    permissions: { type: UserPermissionsInput },
-}
-
-const EditUserInput = new GraphQLInputObjectType({
-    name: 'EditUserInput',
-    fields: userEditableFields,
-});
+const adminsResolver = new AdminsResolver();
 
 /** @type {import('graphql/type/definition').GraphQLFieldConfigMap} */
 module.exports = {
-    addUser: {
-        type: UserType,
+    addAdmin: {
+        type: AdminType,
         args: {
-            firstname: { type: GraphQLNonNull(GraphQLString) },
-            email: { type: GraphQLNonNull(GraphQLString) },
-            lastname: { type: GraphQLString },
-            permissions: {
-                type: UserPermissionsInput,
-                args: {
-                    canSee: { type: AdminPagesRights },
-                    canEdit: { type: AdminPagesRights },
-                    canDelete: { type: AdminPagesRights },
-                },
+            input: {
+                type: GraphQLNonNull(NewAdminInput)
             },
         },
-        resolve: authProtect(addUserProtect(UserResolver.add)),
+        resolve: adminsResolver.add.bind(adminsResolver)
+        // resolve: authProtect(addUserProtect(UserResolver.add)),
     },
-    editUser: {
-        type: UserType,
+    editAdmin: {
+        type: AdminType,
         args: {
-            id: { type: GraphQLNonNull(GraphQLString) },
-            data: {
-                type: GraphQLNonNull(EditUserInput),
-                args: userEditableFields,
+            id: { type: GraphQLNonNull(GraphQLID) },
+            input: {
+                type: GraphQLNonNull(EditAdminInput),
             },
         },
-        resolve: authProtect(editUserProtect(UserResolver.edit)),
+        resolve: adminsResolver.edit.bind(adminsResolver)
+        // resolve: authProtect(editUserProtect(UserResolver.edit)),
     },
-    deleteUser: {
-        type: UserType,
+    deleteAdmin: {
+        type: AdminType,
         args: {
             id: { type: new GraphQLNonNull(GraphQLString) },
         },
-        resolve: authProtect(UserResolver.delete),
+        resolve: adminsResolver.delete.bind(adminsResolver)
+        // resolve: authProtect(UserResolver.delete),
     }
 }

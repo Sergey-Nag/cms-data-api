@@ -1,31 +1,40 @@
-const { GraphQLString, GraphQLList, GraphQLBoolean } = require('graphql');
-const { UserType, UserPermissionsInput } = require('./type');
-const UserResolver = require('./UsersResolver');
+const { GraphQLList } = require('graphql');
+const { AdminType } = require('./type');
 const { authProtect } = require('../utils');
+const { AdminsFilterInput, PaginatedAdminsType } = require('./queryArgs');
+const { SortInput } = require('../utils/sort');
+const AdminsResolver = require('./AdminsResolver');
+const { PaginationInput } = require('../utils/pagination');
 
 const queryFields = {
-    id: { type: GraphQLString },
-    firstname: { type: GraphQLString },
-    lastname: { type: GraphQLString },
-    email: { type: GraphQLString },
-    permissions: { type: UserPermissionsInput },
-    isOnline: { type: GraphQLBoolean },
-    createdISO: { type: GraphQLString },
-    lastModifiedISO: { type: GraphQLString },
-    createdById: { type: GraphQLString },
+    filter: {
+        type: AdminsFilterInput
+    },
+    sort: {
+        type: GraphQLList(SortInput)
+    },
+    pagination: {
+        type: PaginationInput
+    }
 }
 
 
+const adminsResolver = new AdminsResolver();
+
 /** @type {import('graphql/type/definition').GraphQLFieldConfigMap} */
 module.exports = {
-    users: {
-        type: GraphQLList(UserType),
+    admins: {
+        type: PaginatedAdminsType,
         args: queryFields,
-        resolve: authProtect(UserResolver.getAll)
+        resolve: adminsResolver.getAll.bind(adminsResolver)
+        // resolve: authProtect(UserResolver.getAll)
     },
-    user: {
-        type: UserType,
-        args: queryFields,
-        resolve: authProtect(UserResolver.get),
-    }
+    admin: {
+        type: AdminType,
+        args: {
+            find: queryFields.filter
+        },
+        resolve: adminsResolver.get.bind(adminsResolver)
+        // resolve: authProtect(UserResolver.get),
+    },
 };

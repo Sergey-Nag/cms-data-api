@@ -21,8 +21,8 @@ class UserResolver {
         const users = new UserRepository();
         await users.load();
 
-        new UserValidator(actionUser)
-            .canEdit('users');
+        // new UserValidator(actionUser)
+        //     .canEdit('users');
 
         UserValidator.validateDataToCreate(data);
 

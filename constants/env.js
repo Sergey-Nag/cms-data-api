@@ -2,6 +2,8 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? ADMIN_EMAIL;
 const ADMIN_ID = process.env.ADMIN_ID ?? 'admin-id';
 
+const HASH_PASSWORD_ROUNDS = process.env.HASH_PASSWORD_ROUND ?? 2;
+
 const SECRET_ACCESS_TOKEN = process.env.SECRET_ACCESS_TOKEN ?? 'secret-access-token';
 const SECRET_REFRESH_TOKEN = process.env.SECRET_REFRESH_TOKEN ?? 'secret-refresh-token';
 
@@ -16,4 +18,5 @@ module.exports = {
     SECRET_REFRESH_TIME,
     SECRET_ACCESS_TOKEN,
     SECRET_REFRESH_TOKEN,
+    HASH_PASSWORD_ROUNDS,
 }

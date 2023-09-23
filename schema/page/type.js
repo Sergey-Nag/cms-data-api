@@ -1,5 +1,5 @@
 const { GraphQLObjectType, GraphQLString, GraphQLList } = require('graphql');
-const {UserType} = require('../user/type');
+const {AdminType} = require('../user/type');
 const PagesResolver = require('./PagesResolver');
 
 const PageType = new GraphQLObjectType({
@@ -11,11 +11,11 @@ const PageType = new GraphQLObjectType({
         title: { type: GraphQLString },
         createdISO: { type: GraphQLString },
         createdBy: {
-            type: UserType,
+            type: AdminType,
             resolve: PagesResolver.createdBy
         },
         modifiedBy: {
-            type: UserType,
+            type: AdminType,
             resolve: PagesResolver.modifiedBy
         },
         lastModifiedISO: { type: GraphQLString },

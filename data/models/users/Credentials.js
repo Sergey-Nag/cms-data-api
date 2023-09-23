@@ -1,29 +1,23 @@
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
+const { HASH_PASSWORD_ROUNDS } = require('../../../constants/env');
 
 const isDev = process.env.NODE_ENV !== 'production';
 
-module.exports = class Credentials {
-    constructor({id, password, hashedPassword, __TEST__password = null}) {
-        this.id = id;
-        this.hashedPassword = password ?? hashedPassword;
-        this.rounds = Math.round(Math.random() * 10);
+module.exports = class UserCredentials {
+    constructor({hashedPassword, __TEST__password } = {}) {
+        this.hashedPassword = hashedPassword;
 
-        if (isDev || __TEST__password) {
-            this.__TEST__password = __TEST__password ?? password;
+        if (__TEST__password) {
+            this.__TEST__password = __TEST__password;
         }
     }
 
-    async hashPassword(rounds) {
-        if (rounds) this.rounds = Math.min(rounds, 20);
-        this.hashedPassword = await bcrypt.hash(this.hashedPassword, this.rounds);
-    }
+    async hashPassword(password) {
+        this.hashedPassword = await bcrypt.hash(password, HASH_PASSWORD_ROUNDS);
 
-    async changePassword(newPassword) {
-        this.hashedPassword = newPassword;
         if (isDev) {
-            this.__TEST__password = newPassword;
+            this.__TEST__password = password;
         }
-        await this.hashPassword();
     }
 
     async isPasswordValidAsync(password) {

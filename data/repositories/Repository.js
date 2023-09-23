@@ -1,7 +1,7 @@
 const isEmpty = require('lodash/isEmpty');
 const { readData, writeData } = require('..');
-const DataFilter = require('../filter/DataFilter');
-const DataFinder = require('../filter/DataFinder');
+const DataFilter = require('../_filter/DataFilter');
+const DataFinder = require('../_filter/DataFinder');
 
 class Repository {
     constructor(dataName) {

@@ -4,7 +4,7 @@ const UserCredentialsRepository = require('../data/repositories/UserCredentialsR
 const ApiErrorFactory = require("../utils/ApiErrorFactory");
 const { ADMIN_PASSWORD, ADMIN_ID, ADMIN_EMAIL } = require('../constants/env');
 const User = require('../data/models/users/User');
-const { PASSWORD_VALIDATION_REGEXP } = require('../constants/regExps');
+const { PASSWORD_VALIDATION_REGEXP } = require('../constants/regexp');
 
 class UserRegistrationService {
     static generatePassword() {

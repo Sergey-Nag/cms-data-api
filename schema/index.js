@@ -16,7 +16,6 @@ const Mutation = new GraphQLObjectType({
         ...pageMutationFields,
         ...userMutationFields,
     },
-    
 });
 
 module.exports = new GraphQLSchema({

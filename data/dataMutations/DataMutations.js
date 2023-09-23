@@ -1,0 +1,31 @@
+const DataFilter = require("./filter/DataFilter");
+const DataPagination = require("./pagination/DataPagination");
+const DataSort = require("./sort/DataSort");
+
+class DataMutations {
+    constructor({filter, sort, pagination}, isFilterPartial = false) {
+        this.filtering = filter && new DataFilter(filter, isFilterPartial);
+        this.sorting = sort && new DataSort(sort);
+        this.pagination = pagination && new DataPagination(pagination);
+    }
+
+    mutate(data) {
+        let mutatedData = data;
+        
+        if (this.filtering) {
+            mutatedData = this.filtering.filter(data);
+        }
+
+        if (this.sorting) {
+            mutatedData = this.sorting.sort(data);
+        }
+
+        if (this.pagination) {
+            mutatedData = this.pagination.paginate(data);
+        }
+
+        return mutatedData;
+    }
+}
+
+module.exports = DataMutations;

@@ -1,4 +1,4 @@
-const CreatableModel = require("./CreateableModel");
+const CreatableModel = require("./UserEditableModel");
 
 class ModifiableModel extends CreatableModel {
     constructor({id, createdById, createdISO, modifiedById, lastModifiedISO}, idPrefix) {

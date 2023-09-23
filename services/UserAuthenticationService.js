@@ -3,7 +3,7 @@ const { UserRepository } = require('../data/repositories');
 const ApiErrorFactory = require('../utils/ApiErrorFactory');
 const isEmailValid = require('../utils/isEmailValid');
 const { ADMIN_EMAIL } = require('../constants/env');
-const { PASSWORD_VALIDATION_REGEXP } = require('../constants/regExps');
+const { PASSWORD_VALIDATION_REGEXP } = require('../constants/regexp');
 
 module.exports = class UserAuthenticationService {
     static #validateEmail(email) {

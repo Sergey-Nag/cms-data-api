@@ -1,27 +1,18 @@
-const { GraphQLObjectType, GraphQLString, GraphQLBoolean, GraphQLEnumType, GraphQLInputObjectType } = require('graphql');
+const { GraphQLObjectType, GraphQLString, GraphQLBoolean, GraphQLEnumType, GraphQLInputObjectType, GraphQLID } = require('graphql');
 const UsersResolver = require('./UsersResolver');
+const { DEFAULT_PERMISSIONS } = require('../../constants/defaults');
+const AdminsResolver = require('./AdminsResolver');
 
 const AdminPagesRights = new GraphQLObjectType({
     name: 'AdminPagesRights',
-    fields: () => ({
-        analytics: { type: GraphQLBoolean },
-        products: { type: GraphQLBoolean },
-        orders: { type: GraphQLBoolean },
-        pages: { type: GraphQLBoolean },
-        users: { type: GraphQLBoolean },
-    })
+    fields: Object.keys(DEFAULT_PERMISSIONS).reduce((acc, permission) => {
+        acc[permission] = {
+            type: GraphQLBoolean,
+        }
+        return acc;
+    }, {})
 });
 
-const AdminPagesRightsInput = new GraphQLInputObjectType({
-    name: 'AdminPagesRightsInput',
-    fields: {
-        analytics: { type: GraphQLBoolean },
-        products: { type: GraphQLBoolean },
-        orders: { type: GraphQLBoolean },
-        pages: { type: GraphQLBoolean },
-        users: { type: GraphQLBoolean },
-    }
-})
 
 const UserPermissions = new GraphQLObjectType({
     name: 'UserPermissions',
@@ -32,42 +23,53 @@ const UserPermissions = new GraphQLObjectType({
     })
 })
 
-const UserPermissionsInput = new GraphQLInputObjectType({
-    name: 'UserPermissionsInput',
-    fields: {
-        canSee: { type: AdminPagesRightsInput },
-        canEdit: { type: AdminPagesRightsInput },
-        canDelete: { type: AdminPagesRightsInput }
-    },
-});
+const adminsResolver = new AdminsResolver();
 
-const UserType = new GraphQLObjectType({
-    name: 'User',
+const AdminType = new GraphQLObjectType({
+    name: 'Admin',
     fields: () => ({
-        id: { type: GraphQLString },
+        id: { type: GraphQLID },
         firstname: { type: GraphQLString },
         lastname: { type: GraphQLString },
         email: { type: GraphQLString },
         permissions: { type: UserPermissions },
-        isOnline: { 
-            type: GraphQLBoolean,
-            resolve: UsersResolver.isOnline
-        },
+        isOnline: { type: GraphQLBoolean },
         createdISO: { type: GraphQLString },
         lastModifiedISO: { type: GraphQLString },
         createdBy: {
-            type: UserType,
-            resolve: async ({createdById, actionUserId}, args, context) => {
-                return createdById && await UsersResolver.get(null, { id: createdById, actionUserId }, context);
+            type: AdminType,
+            resolve: async ({ createdById }, args, context) => {
+                return createdById && await adminsResolver.get(
+                    null, 
+                    { 
+                        find: { 
+                            id: createdById 
+                        } 
+                    },
+                    context
+                );
             }
-        }
+        },
+        modifiedBy: {
+            type: AdminType,
+            resolve: async ({ modifiedById }, args, context) => {
+                return modifiedById && await adminsResolver.get(
+                    null,
+                    {
+                        find: {
+                            id: modifiedById
+                        }
+                    }, 
+                    context
+                );
+            }
+        },
+
     }),
 });
 
 module.exports = {
-    UserType,
+    AdminType,
     AdminPagesRights,
     UserPermissions,
-    AdminPagesRightsInput,
-    UserPermissionsInput,
 };

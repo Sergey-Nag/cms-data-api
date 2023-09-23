@@ -1,62 +1,24 @@
-const CreatableModel = require('../baseModels/CreateableModel');
+const UserEditableModel = require('../baseModels/UserEditableModel');
+const CreatableModel = require('../baseModels/UserEditableModel');
 
-const defaultPermissions = {
-    analytics: false,
-    products: false,
-    orders: false,
-    pages: false,
-    users: false,
-}
-
-class User extends CreatableModel {
-    constructor({ id, firstname, lastname, createdISO, lastModifiedISO, createdById, email, permissions }, createdByIdInitital = null) {
+class User extends UserEditableModel {
+    constructor({ firstname, lastname, email, createdById, ...data }, createdByIdInitital = null, idPrefix = null) {
         super({
-            id, 
-            createdById: createdByIdInitital ?? createdById, 
-            createdISO
-        }, 'U');
+            ...data,
+            createdById: createdByIdInitital ?? createdById,
+        }, idPrefix);
 
         this.firstname = firstname;
-        this.email = email;
         this.lastname = lastname ?? null;
-        this.lastModifiedISO = lastModifiedISO ?? null;
-
-        this.permissions = {
-            canSee: {
-                ...defaultPermissions,
-                ...permissions?.canSee,
-            },
-            canEdit: {
-                ...defaultPermissions,
-                ...permissions?.canEdit,
-            },
-            canDelete: {
-                ...defaultPermissions,
-                ...permissions?.canDelete,
-            }
-        }
+        this.email = email;
     }
 
-    update({ firstname, lastname, email, permissions }, modifiedById = null) {
+    update({ firstname, lastname, email }, modifiedById = null) {
         this.firstname = firstname ?? this.firstname;
         this.lastname = lastname ?? this.lastname;
         this.email = email ?? this.email;
-        this.lastModifiedISO = new Date().toISOString();
 
-        this.permissions = {
-            canSee: {
-                ...this.permissions?.canSee,
-                ...permissions?.canSee,
-            },
-            canEdit: {
-                ...this.permissions?.canEdit,
-                ...permissions?.canEdit,
-            },
-            canDelete: {
-                ...this.permissions?.canDelete,
-                ...permissions?.canDelete,
-            }
-        };
+        super.update(modifiedById);
     }
 }
 
