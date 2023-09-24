@@ -1,9 +1,11 @@
-const UserCredentialsRepository = require('../data/repositories/UserCredentialsRepository');
-const { UserRepository } = require('../data/repositories');
 const ApiErrorFactory = require('../utils/ApiErrorFactory');
 const isEmailValid = require('../utils/isEmailValid');
 const { ADMIN_EMAIL } = require('../constants/env');
 const { PASSWORD_VALIDATION_REGEXP } = require('../constants/regexp');
+const Repository = require('../data/repositories/Repository');
+const { ADMINS_REPO_NAME } = require('../constants/repositoryNames');
+const Admin = require('../data/models/users/Admin');
+const SessionManager = require('../managers/SessionManager');
 
 module.exports = class UserAuthenticationService {
     static #validateEmail(email) {
@@ -25,51 +27,45 @@ module.exports = class UserAuthenticationService {
         this.#validateEmail(email);
         this.#validatePasword(password);
 
-        const credsRepo = new UserCredentialsRepository();
-        const usersRepo = new UserRepository();
+        const repo = new Repository(ADMINS_REPO_NAME);
+        await repo.load();
 
-        await credsRepo.load();
-        await usersRepo.load();
-
-        const user = usersRepo.get({ email });
+        const user = repo.data.find((admin) => admin.email === email);
 
         if (!user) {
             throw ApiErrorFactory.userCredentialsInvalid();
         }
-
-        const userCreds = credsRepo.get({ id: user.id });
-
-        if (!userCreds) {
-            throw ApiErrorFactory.somethingWentWrong();
-        }
-
-        if (!(await userCreds.isPasswordValidAsync(password))) {
+        const admin = new Admin(user);
+        
+        if (!(await admin.isPasswordValidAsync(password))) {
             throw ApiErrorFactory.userCredentialsInvalid();
         }
 
-        return user;
+        return admin;
     }
     static async logoutUser(userId) {
         if (!userId) {
             return ApiErrorFactory.unauthorized();
         }
 
-        const usersRepo = new UserRepository();
-        await usersRepo.load();
-
-        const user = usersRepo.get({ id: userId });
-        if (!user) {
-            throw ApiErrorFactory.userNotFound(userId);
+        const sessions = new SessionManager();
+        if (!sessions.getSession(userId)) {
+            throw ApiErrorFactory.unauthorized();
         }
+
+        sessions.endSession(userId);
     }
     static async updatePassword(userId, newPassword) {
         this.#validatePasword(newPassword);
-        const credsRepo = new UserCredentialsRepository();
-        await credsRepo.load();
-        
-        const updated = await credsRepo.editAsync(userId, newPassword);
-        
-        await credsRepo.save();
+        const repo = new Repository(ADMINS_REPO_NAME);
+        await repo.load();
+        const user = repo.get(({ id }) => id === userId);
+
+        const admin = new Admin(user);
+
+        const updated = await admin.setPassword(newPassword);
+        repo.update(userId, admin);
+        await repo.save();
         return !!updated;
     }
 }

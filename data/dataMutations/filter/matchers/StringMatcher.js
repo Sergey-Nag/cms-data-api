@@ -14,6 +14,8 @@ class StringMatcher extends Matcher {
 
     #particalyMatched(item) {
         const value = this.getItemValue(item);
+        
+        if (typeof value !== 'string') return false;
 
         return value.toLowerCase().includes(this.expectedValue.toLowerCase());
     }

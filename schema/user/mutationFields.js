@@ -1,7 +1,7 @@
 const { GraphQLString, GraphQLNonNull, GraphQLID } = require('graphql');
 const { AdminType } = require('./type');
-const { authProtect } = require('../utils');
-const { addUserProtect, editUserProtect } = require('./mutationProtections');
+const { authProtect, canEditProtect, canDeleteProtect } = require('../utils');
+const { addUserProtect, editUserProtect, addAdminProtect, editAdminProtect } = require('./mutationProtections');
 const AdminsResolver = require('./AdminsResolver');
 const { NewAdminInput, EditAdminInput } = require('./mutationArgs');
 
@@ -16,7 +16,14 @@ module.exports = {
                 type: GraphQLNonNull(NewAdminInput)
             },
         },
-        resolve: adminsResolver.add.bind(adminsResolver)
+        resolve: authProtect(
+            canEditProtect(
+                'admins',
+                addAdminProtect(
+                    adminsResolver.add.bind(adminsResolver)
+                )
+            )
+        ) 
         // resolve: authProtect(addUserProtect(UserResolver.add)),
     },
     editAdmin: {
@@ -27,7 +34,14 @@ module.exports = {
                 type: GraphQLNonNull(EditAdminInput),
             },
         },
-        resolve: adminsResolver.edit.bind(adminsResolver)
+        resolve: authProtect(
+            canEditProtect(
+                'admins',
+                editAdminProtect(
+                    adminsResolver.edit.bind(adminsResolver)
+                )
+            )
+        )
         // resolve: authProtect(editUserProtect(UserResolver.edit)),
     },
     deleteAdmin: {
@@ -35,7 +49,12 @@ module.exports = {
         args: {
             id: { type: new GraphQLNonNull(GraphQLID) },
         },
-        resolve: adminsResolver.delete.bind(adminsResolver)
+        resolve: authProtect(
+            canDeleteProtect(
+                'admins',
+                adminsResolver.delete.bind(adminsResolver)
+            )
+        )
         // resolve: authProtect(UserResolver.delete),
     }
 }

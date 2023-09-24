@@ -1,6 +1,6 @@
 const { GraphQLList } = require('graphql');
 const { AdminType } = require('./type');
-const { authProtect } = require('../utils');
+const { authProtect, canSeeProtect } = require('../utils');
 const { AdminsFilterInput, PaginatedAdminsType } = require('./queryArgs');
 const { SortInput } = require('../utils/sort');
 const AdminsResolver = require('./AdminsResolver');
@@ -25,7 +25,11 @@ module.exports = {
     admins: {
         type: PaginatedAdminsType,
         args: queryFields,
-        resolve: adminsResolver.getAll.bind(adminsResolver)
+        resolve: authProtect(
+            canSeeProtect('admins', 
+                adminsResolver.getAll.bind(adminsResolver)
+            )
+        )
         // resolve: authProtect(UserResolver.getAll)
     },
     admin: {
@@ -33,7 +37,11 @@ module.exports = {
         args: {
             find: queryFields.filter
         },
-        resolve: adminsResolver.get.bind(adminsResolver)
+        resolve: authProtect(
+            canSeeProtect('admins', 
+                adminsResolver.get.bind(adminsResolver)
+            )
+        )
         // resolve: authProtect(UserResolver.get),
     },
 };

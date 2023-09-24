@@ -1,4 +1,4 @@
-const mockUsers = require('../../__mocks__/users.json');
+const mockAdmins = require('../../__mocks__/admins.json');
 const mockPages = require('../../__mocks__/pages.json');
 const data = require('../../../data/index.js');
 const server = require('../../../index');
@@ -8,13 +8,13 @@ const { GRAPH_ENDPOINT } = require('../../constants');
 const { expectUserData } = require('../utils');
 const { merge } = require('lodash');
 const SessionManager = require('../../../managers/SessionManager');
-const { USERS_REPO_NAME, PAGES_REPO_NAME } = require('../../../constants/repositoryNames');
-const mockUsersRepoName = USERS_REPO_NAME;
+const { PAGES_REPO_NAME, ADMINS_REPO_NAME } = require('../../../constants/repositoryNames');
+const mockAdminsRepoName = ADMINS_REPO_NAME;
 const mockPagesRepoName = PAGES_REPO_NAME;
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === mockUsersRepoName) {
-            return Promise.resolve(mockUsers);
+        if (name === mockAdminsRepoName) {
+            return Promise.resolve(mockAdmins);
         } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
         }
@@ -25,7 +25,7 @@ jest.mock('../../../data/index.js', () => ({
 const MOCK_ISO_TIME = '2023-09-02T19:30:36.258Z'
 Date.prototype.toISOString = jest.fn(() => MOCK_ISO_TIME);
 
-describe('editUser mutation', () => {
+describe('Edit entity mutation (editAdmin)', () => {
     const mockWriteDataFn = jest.fn();
     jest.spyOn(data, 'writeData').mockImplementation(mockWriteDataFn);
 
@@ -33,15 +33,15 @@ describe('editUser mutation', () => {
     const session = new SessionManager();
 
     beforeAll(() => {
-        const first = session.createSession(mockUsers[0].id);
-        const second = session.createSession(mockUsers[1].id);
+        const first = session.createSession(mockAdmins[0].id);
+        const second = session.createSession(mockAdmins[1].id);
         userWithAccessToken = first.accessToken;
         userWithoutAccessToken = second.accessToken;
     });
 
     afterAll(() => {
-        session.endSession(mockUsers[0].id);
-        session.endSession(mockUsers[1].id);
+        session.endSession(mockAdmins[0].id);
+        session.endSession(mockAdmins[1].id);
     });
 
     beforeEach(() => {
@@ -52,9 +52,9 @@ describe('editUser mutation', () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `mutation {
-                    editUser(
-                        id: "${mockUsers[2].id}"
-                        data: {
+                    editAdmin(
+                        id: "${mockAdmins[2].id}"
+                        input: {
                             firstname: "yoyoy"
                         }
                     ) {
@@ -64,7 +64,7 @@ describe('editUser mutation', () => {
             });
 
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.unauthorized().message);
-        expect(response.body.data.editUser).toBeNull();
+        expect(response.body.data.editAdmin).toBeNull();
     });
 
     it('Should update a user data by user that has access and return it', async () => {
@@ -78,11 +78,12 @@ describe('editUser mutation', () => {
                     products: true,
                     orders: true,
                     pages: true,
-                    users: true,
+                    admins: true,
+                    customers: true,
                 }
             }
         }
-        const oldUser = {...mockUsers[2]};
+        const oldUser = {...mockAdmins[2]};
 
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
@@ -90,10 +91,10 @@ describe('editUser mutation', () => {
                 variables: {
                     data: updateData,
                 },
-                query: `mutation EDIT($data: EditUserInput!) {
-                    editUser(
-                        id: "${mockUsers[2].id}"
-                        data: $data
+                query: `mutation EDIT($data: EditAdminInput!) {
+                    editAdmin(
+                        id: "${mockAdmins[2].id}"
+                        input: $data
                     ) {
                         id
                         firstname
@@ -108,21 +109,24 @@ describe('editUser mutation', () => {
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canEdit {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canDelete {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                         }
                         createdBy {
@@ -134,23 +138,23 @@ describe('editUser mutation', () => {
 
         
         expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.editUser).toBeDefined();
+        expect(response.body.data.editAdmin).toBeDefined();
 
-        expectUserData(response.body.data.editUser, {
+        expectUserData(response.body.data.editAdmin, {
             ...updateData,
             lastModifiedISO: MOCK_ISO_TIME,
         }, oldUser);
         
-        merge(updateData, mockUsers[2]);
-        expect(mockUsers).toContainEqual(updateData);
-        expect(mockWriteDataFn).toHaveBeenCalledWith(USERS_REPO_NAME, mockUsers);
+        merge(updateData, mockAdmins[2]);
+        expect(mockAdmins).toContainEqual(updateData);
+        expect(mockWriteDataFn).toHaveBeenCalledWith(ADMINS_REPO_NAME, mockAdmins);
     });
 
     it.each([
         [
             'Should get Action forbidden error when action user has no access', 
             {
-                id: mockUsers[2].id, 
+                id: mockAdmins[2].id, 
                 withAccess: false,
             },
             ApiErrorFactory.actionForbidden(),
@@ -164,17 +168,17 @@ describe('editUser mutation', () => {
             ApiErrorFactory.userNotFound(),
         ],
         [
-            'Should get Something went wrong error when id is empty', 
+            'Should get User not found error when id is empty', 
             {
                 id: '', 
                 withAccess: true,
             },
-            ApiErrorFactory.somethingWentWrong(),
+            ApiErrorFactory.userNotFound(),
         ],
         [
             'Should get wrong token error', 
             {
-                id: mockUsers[2].id, 
+                id: mockAdmins[2].id, 
                 token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJpMGN5a3Y2b2xscmMwejh2IiwiaWF0IjoxNjk0MjM5NzY4LCJleHAiOjE2OTQyNDMzNjh9.K-eOoZ7ZRxhYyveEbVKWpoEi9d0f_9GaexxiBraYgZo'
             },
             ApiErrorFactory.unauthorized(),
@@ -190,7 +194,8 @@ describe('editUser mutation', () => {
                     products: true,
                     orders: true,
                     pages: true,
-                    users: true,
+                    admins: true,
+                    customers: true,
                 }
             }
         }
@@ -201,10 +206,10 @@ describe('editUser mutation', () => {
                     id,
                     data: updateData,
                 },  
-                query: `mutation EDIT($data: EditUserInput! $id: String!) {
-                    editUser(
+                query: `mutation EDIT($data: EditAdminInput! $id: ID!) {
+                    editAdmin(
                         id: $id
-                        data: $data
+                        input: $data
                     ) {
                         id
                         lastname
@@ -215,7 +220,7 @@ describe('editUser mutation', () => {
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(error.message);
         try {
-            expect(response.body.data.editUser).toBeNull();
+            expect(response.body.data.editAdmin).toBeNull();
         } catch(e) {
             expect(response.body.data).toBeUndefined();
         }
@@ -234,7 +239,7 @@ describe('editUser mutation', () => {
             ['email'], ['new-awesome@mail.cc'],
         ],
         [
-            ['permissions'], [{ canSee: { pages: true, users: false } }],
+            ['permissions'], [{ canSee: { pages: true, admins: false } }],
         ],
         [
             ['firstname', 'permissions'],
@@ -249,17 +254,17 @@ describe('editUser mutation', () => {
             acc[prop] = values[i];
             return acc;
         }, {});
-        const oldUser = {...mockUsers[2]};
+        const oldUser = {...mockAdmins[2]};
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 variables: {
                     data: updateData,
                 },  
-                query: `mutation EDIT($data: EditUserInput!) {
-                    editUser(
-                        id: "${mockUsers[2].id}"
-                        data: $data
+                query: `mutation EDIT($data: EditAdminInput!) {
+                    editAdmin(
+                        id: "${mockAdmins[2].id}"
+                        input: $data
                     ) {
                         id
                         firstname
@@ -272,21 +277,24 @@ describe('editUser mutation', () => {
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canEdit {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canDelete {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                         }
                     }
@@ -294,8 +302,8 @@ describe('editUser mutation', () => {
             });
         
         expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.editUser).toBeDefined();
-        expectUserData(response.body.data.editUser, updateData, oldUser);
+        expect(response.body.data.editAdmin).toBeDefined();
+        expectUserData(response.body.data.editAdmin, updateData, oldUser);
         expect(mockWriteDataFn).toHaveBeenCalled();
     });
 
@@ -335,17 +343,17 @@ describe('editUser mutation', () => {
                 variables: {
                     data: updateData,
                 },
-                query: `mutation EDIT($data: EditUserInput!) {
-                    editUser(
-                        id: "${mockUsers[2].id}"
-                        data: $data
+                query: `mutation EDIT($data: EditAdminInput!) {
+                    editAdmin(
+                        id: "${mockAdmins[2].id}"
+                        input: $data
                     ) {
                         id
                     }
                 }`
             });
 
-        expect(response.body.data.editUser).toBeNull();
+        expect(response.body.data.editAdmin).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(error.message);
 

@@ -1,4 +1,4 @@
-const mockUsers = require('../../__mocks__/users.json');
+const mockAdmins = require('../../__mocks__/admins.json');
 const mockPages = require('../../__mocks__/pages.json');
 const data = require('../../../data/index.js');
 const server = require('../../../index');
@@ -7,16 +7,16 @@ const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const SessionManager = require('../../../managers/SessionManager');
-const { USERS_REPO_NAME, PAGES_REPO_NAME } = require('../../../constants/repositoryNames');
+const { PAGES_REPO_NAME, ADMINS_REPO_NAME } = require('../../../constants/repositoryNames');
 
-const mockUsersRepoName = USERS_REPO_NAME;
+const mockAdminsRepoName = ADMINS_REPO_NAME;
 const mockPagesRepoName = PAGES_REPO_NAME;
 
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === mockUsersRepoName) {
-            return Promise.resolve(mockUsers);
+        if (name === mockAdminsRepoName) {
+            return Promise.resolve(mockAdmins);
         } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
         }
@@ -27,7 +27,7 @@ jest.mock('../../../data/index.js', () => ({
 const MOCK_ISO_TIME = '2023-09-02T19:30:36.258Z'
 Date.prototype.toISOString = jest.fn(() => MOCK_ISO_TIME);
 
-describe('addPage mutation', () => {
+describe('Add entity mutation (addPage)', () => {
     const mockWriteDataFn = jest.fn();
     const MOCK_UNIQID = 'Pageuniqid';
     uniqid.mockReturnValue(MOCK_UNIQID);
@@ -36,15 +36,15 @@ describe('addPage mutation', () => {
     const session = new SessionManager();
 
     beforeAll(() => {
-        const first = session.createSession(mockUsers[0].id);
-        const second = session.createSession(mockUsers[1].id);
+        const first = session.createSession(mockAdmins[0].id);
+        const second = session.createSession(mockAdmins[1].id);
         userWithAccessToken = first.accessToken;
         userWithoutAccessToken = second.accessToken;
     });
 
     afterAll(() => {
-        session.endSession(mockUsers[0].id);
-        session.endSession(mockUsers[1].id);
+        session.endSession(mockAdmins[0].id);
+        session.endSession(mockAdmins[1].id);
     });
 
     beforeEach(() => {
@@ -56,9 +56,11 @@ describe('addPage mutation', () => {
             .send({
                 query: `mutation {
                     addPage(
-                        alias: "new"
-                        title:"New Page"
-                        path: ["new", "page","path"]
+                        input: {
+                            alias: "new"
+                            title:"New Page"
+                            path: ["new", "page","path"]
+                        }
                     ) {
                         id
                     }
@@ -69,15 +71,56 @@ describe('addPage mutation', () => {
         expect(response.body.data.addPage).toBeNull();
     });
 
+    it('Should get Action forbidden error when action user has no access', async () => {
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${userWithoutAccessToken}`)
+            .send({
+                query: `mutation {
+                    addPage(
+                        input: {
+                            alias: "new-2"
+                            title:"New Page #2"
+                            path: ["new", "page","path", "two"]
+                        }
+                    ) {
+                        id
+                        alias
+                        title
+                        path
+                    }
+                }
+                `
+            });
+
+        expect(response.body.data.addPage).toBeNull();
+        expect(response.body.errors).toBeDefined();
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.actionForbidden().message);
+
+        expect(mockPages).not.toContainEqual({
+            alias: 'new-2',
+            modifiedById: null,
+            id: MOCK_UNIQID,
+            path: ["new", "page", "path", "two"],
+            title: 'New Page #2',
+            createdISO: MOCK_ISO_TIME,
+            lastModifiedISO: null,
+            createdById: mockAdmins[0].id,
+            contentId: null
+        });
+        expect(mockWriteDataFn).not.toHaveBeenCalled();
+    });
+
     it('Should save data with proper values by user that has access and return it', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
                     addPage(
-                        alias: "new"
-                        title:"New Page"
-                        path: ["new", "page","path"]
+                        input: {
+                            alias: "new"
+                            title:"New Page"
+                            path: ["new", "page","path"]
+                        }
                     ) {
                         id
                         path
@@ -99,16 +142,16 @@ describe('addPage mutation', () => {
 
         expect(response.body.errors).toBeUndefined();
         expect(response.body.data.addPage).toBeDefined();
-        const {addPage} = response.body.data;
+        const { addPage } = response.body.data;
         const expectedData = {
             alias: 'new',
             modifiedById: null,
             id: MOCK_UNIQID,
-            path: ["new", "page","path"],
+            path: ["new", "page", "path"],
             title: 'New Page',
             createdISO: MOCK_ISO_TIME,
             lastModifiedISO: null,
-            createdById: mockUsers[0].id,
+            createdById: mockAdmins[0].id,
             contentId: null
         }
 
@@ -119,8 +162,8 @@ describe('addPage mutation', () => {
         expect(addPage).toHaveProperty('createdISO', expectedData.createdISO);
         expect(addPage).toHaveProperty('lastModifiedISO', expectedData.lastModifiedISO);
         expect(addPage).toHaveProperty('createdBy', {
-            id: mockUsers[0].id,
-            firstname: mockUsers[0].firstname,
+            id: mockAdmins[0].id,
+            firstname: mockAdmins[0].firstname,
         });
         expect(addPage).toHaveProperty('modifiedBy', null);
 
@@ -135,15 +178,17 @@ describe('addPage mutation', () => {
             .send({
                 query: `mutation {
                     addPage(
-                        title:"New Page"
-                        path: ["new", "page","path"]
+                        input: {
+                            title: "${mockPages[0].title}"
+                            path: ["new", "page","path"]
+                        }
                     ) {
                         alias
                     }
                 }
                 `
             });
-        
+
         expect(response.body.data.addPage).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageAlreadyExists('title').message);
@@ -157,16 +202,18 @@ describe('addPage mutation', () => {
             .send({
                 query: `mutation {
                     addPage(
-                        title: "Some other page title"
-                        path: ["index", "page"]
-                        alias: "new-alias-1"
+                        input: {
+                            title: "Some other page title"
+                            path: ["index", "page"]
+                            alias: "${mockPages[1].alias}"
+                        }
                     ) {
                         alias
                     }
                 }
                 `
             });
-        
+
         expect(response.body.data.addPage).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageAlreadyExists('alias').message);
@@ -180,15 +227,17 @@ describe('addPage mutation', () => {
             .send({
                 query: `mutation {
                     addPage(
-                        title:"New Page 2"
-                        path: ["new", "page","path"]
+                        input: {
+                            title:"New Page 2"
+                            path: ["new", "page","path"]
+                        }
                     ) {
                         alias
                     }
                 }
                 `
             });
-        
+
         expect(response.body.errors).toBeUndefined();
         expect(response.body.data.addPage).toBeDefined();
 
@@ -196,42 +245,7 @@ describe('addPage mutation', () => {
         expect(mockPages).toHaveLength(7);
     });
 
-    it('Should get Action forbidden error when action user has no access', async () => {
-        const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${userWithoutAccessToken}`)
-            .send({
-                query: `mutation {
-                    addPage(
-                        alias: "new-2"
-                        title:"New Page #2"
-                        path: ["new", "page","path", "two"]
-                    ) {
-                        id
-                        alias
-                        title
-                        path
-                    }
-                }
-                `
-            });
 
-        expect(response.body.data.addPage).toBeNull();
-        expect(response.body.errors).toBeDefined();
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.actionForbidden().message);
-        
-        expect(mockPages).not.toContainEqual({
-            alias: 'new-2',
-            modifiedById: null,
-            id: MOCK_UNIQID,
-            path: ["new", "page","path", "two"],
-            title: 'New Page #2',
-            createdISO: MOCK_ISO_TIME,
-            lastModifiedISO: null,
-            createdById: mockUsers[0].id,
-            contentId: null
-        });
-        expect(mockWriteDataFn).not.toHaveBeenCalled();
-    });
 
     it('Should get alias invalid error', async () => {
         const INVALID_ALIAS = "SOME ALIAs for a page  ";
@@ -240,9 +254,11 @@ describe('addPage mutation', () => {
             .send({
                 query: `mutation {
                     addPage(
-                        alias: "${INVALID_ALIAS}"
-                        title:"New Page #2"
-                        path: ["new", "page","path", "two"]
+                        input: {
+                            alias: "${INVALID_ALIAS}"
+                            title:"New Page #2"
+                            path: ["new", "page","path", "two"]
+                        }
                     ) {
                         id
                         alias
@@ -250,12 +266,12 @@ describe('addPage mutation', () => {
                 }
                 `
             });
-            
+
         expect(response.body.data.addPage).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageAliasInvalid(INVALID_ALIAS.trim()).message);
     });
-    
+
 
     it.each([
         ['empty path', '[]', ApiErrorFactory.pagePathIsEmpty()],
@@ -267,8 +283,10 @@ describe('addPage mutation', () => {
             .send({
                 query: `mutation {
                     addPage(
-                        title:"New Page #2"
-                        path: ${invalidPath}
+                        input: {
+                            title:"New Page #2"
+                            path: ${invalidPath}
+                        }
                     ) {
                         id
                         alias
@@ -276,7 +294,7 @@ describe('addPage mutation', () => {
                 }
                 `
             });
-            
+
         expect(response.body.data.addPage).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(error.message);
@@ -294,8 +312,10 @@ describe('addPage mutation', () => {
             .send({
                 query: `mutation {
                     addPage(
-                        title: "${title}"
-                        path: ["new"]
+                        input: {
+                            title: "${title}"
+                            path: ["new"]
+                        }
                     ) {
                         id
                         alias
@@ -303,7 +323,7 @@ describe('addPage mutation', () => {
                 }
                 `
             });
-            
+
         expect(response.body.data.addPage).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageTitleToShort().message);

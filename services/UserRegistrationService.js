@@ -1,9 +1,5 @@
 const uniqid = require('uniqid');
-const UserRepository = require("../data/repositories/UserRepository");
-const UserCredentialsRepository = require('../data/repositories/UserCredentialsRepository');
-const ApiErrorFactory = require("../utils/ApiErrorFactory");
 const { ADMIN_PASSWORD, ADMIN_ID, ADMIN_EMAIL } = require('../constants/env');
-const User = require('../data/models/users/User');
 const { PASSWORD_VALIDATION_REGEXP } = require('../constants/regexp');
 const Repository = require('../data/repositories/Repository');
 const { ADMINS_REPO_NAME } = require('../constants/repositoryNames');
@@ -11,30 +7,12 @@ const Admin = require('../data/models/users/Admin');
 
 class UserRegistrationService {
     static generatePassword() {
-        let password = uniqid();
+        let password = uniqid.time();
 
         if (!PASSWORD_VALIDATION_REGEXP.test(password)) {
             password = this.generatePassword();
         }
 
-        return password;
-    }
-    static async createPasswordForUser(user) {
-        if (!user) {
-            throw ApiErrorFactory.somethingWentWrong();
-        }
-        const credsRepo = new UserCredentialsRepository();
-        await credsRepo.load();
-
-
-        const password = this.generatePassword();
-        const userCreds = await credsRepo.addAsync(user, password);
-
-        if (!userCreds || !(await userCreds.isPasswordValidAsync(password))) {
-            throw ApiErrorFactory.somethingWentWrong();
-        }
-
-        await credsRepo.save();
         return password;
     }
     static async isAdminUserExist() {

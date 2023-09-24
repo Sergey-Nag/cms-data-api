@@ -1,3 +1,4 @@
+const { isEmpty } = require("lodash");
 const DataMutations = require("../data/dataMutations/DataMutations");
 const DataFinder = require("../data/dataMutations/filter/DataFinder");
 const ApiErrorFactory = require("../utils/ApiErrorFactory");
@@ -12,7 +13,7 @@ class DataResolver {
     async getAll(parent, { filter, sort, pagination } = {}, context) {
         await this.repository.load();
         const dataMutation = new DataMutations({ filter, sort, pagination }, true);
-        console.log(this.repository);
+
         const allData = this.repository
             .data
             .map((data) => new this.model(data));
@@ -26,19 +27,21 @@ class DataResolver {
     }
 
     async get(parent, { find } = {}, context) {
+        if (isEmpty(find)) return;
+
         await this.repository.load();
 
-        const dataFinder = new DataFinder(find);
+        const dataFinder = new DataFinder(find, true);
         // new UserValidator(actionUser)
         //     .canSee('users');
+        const data = this.repository.data.map(d => new this.model(d));
+        const result = dataFinder.find(data);
 
-        const result = dataFinder.find(this.repository.data);
-        
-        if (result) {
-            return new this.model(result);
+        if (!result) {
+            this.validator.dataNotFound();
         }
 
-        return null;
+        return result;
     }
 
     async add(parent, { input } = {}, {actionUser} = {}) {
@@ -55,20 +58,20 @@ class DataResolver {
         return addedData;
     }
 
-    async edit(parent, { id, input } = {}, context) {
+    async edit(parent, { id, input } = {}, {actionUser} = {}) {
         this.validator.validateDataToEdit(input);
         await this.repository.load();
 
         const dataToUpdate = this.repository.data.find((data) => data.id === id);
 
         if (!dataToUpdate) {
-            throw ApiErrorFactory.somethingWentWrong();
+            this.validator.dataNotFound();
         }
 
         const updateData = new this.model(dataToUpdate);
-        updateData.update(input, context?.actionUserId);
+        updateData.update(input, actionUser?.id);
 
-        this.repository.edit(id, updateData);
+        this.repository.update(id, updateData);
         await this.repository.save();
         return updateData;
     }

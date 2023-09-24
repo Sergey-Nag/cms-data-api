@@ -1,28 +1,24 @@
 const server = require('../../index.js');
 const supertest = require('supertest');
-const mockUsers = require('../__mocks__/users.json');
-const mockCredentials = require('../__mocks__/user-credentials.json');
+const mockAdmins = require('../__mocks__/admins.json');
 const SessionManager = require("../../managers/SessionManager");
 const data = require('../../data/index.js');
 const { REST_ENDPOINT } = require('../constants');
-const { USERS_REPO_NAME, USER_CREDS_REPO_NAME } = require('../../constants/repositoryNames');
+const { USER_CREDS_REPO_NAME, ADMINS_REPO_NAME } = require('../../constants/repositoryNames');
 const ApiErrorFactory = require('../../utils/ApiErrorFactory');
 const jwt = require('jsonwebtoken')
 const uniqid = require('uniqid');
 const { SECRET_ACCESS_TOKEN } = require('../../constants/env');
 const ApiSuccessFactory = require('../../utils/ApiSuccessFactory.js');
-const mockUsersRepoName = USERS_REPO_NAME;
-const mockCredsRepoName = USER_CREDS_REPO_NAME;
+const mockAdminsRepoName = ADMINS_REPO_NAME;
 
 const apiEndpoint = `${REST_ENDPOINT}/change-password`;
 
 jest.mock('../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((dataName) => {
-        if (dataName === mockUsersRepoName) {
-            return mockUsers;
-        } else if (dataName === mockCredsRepoName) {
-            return mockCredentials;
-        }
+        if (dataName === mockAdminsRepoName) {
+            return mockAdmins;
+        };
     }),
     writeData: jest.fn((data) => data),
 }));
@@ -33,11 +29,11 @@ describe('Change password', () => {
     let session;
     beforeEach(() => {
         const sessions = new SessionManager();
-        session = sessions.createSession(mockUsers[0].id);
+        session = sessions.createSession(mockAdmins[0].id);
     });
     afterEach(() => {
         const sessions = new SessionManager();
-        sessions.endSession(mockUsers[0].id);
+        sessions.endSession(mockAdmins[0].id);
     });
 
     it('Should get Token was not provided error when request without Auth header', async () => {
@@ -100,6 +96,7 @@ describe('Change password', () => {
     it('Should successfully update password', async () => {
         const newPassword = 'NewPassword';
         const mockWriteData = jest.fn(() => Promise.resolve());
+        const prevSecret = {...mockAdmins[0]._secret};
         jest.spyOn(data, 'writeData').mockImplementation(mockWriteData);
         const response = await supertest(server).post(apiEndpoint)
             .set('Authorization', `Bearer ${session.accessToken}`)
@@ -110,9 +107,14 @@ describe('Change password', () => {
 
         expect(response.body.error).toBeUndefined();
         expect(response.body.message).toBe(ApiSuccessFactory.passwordUpdated());
-        expect(mockWriteData).toHaveBeenCalledWith(USER_CREDS_REPO_NAME, expect.arrayContaining([
-            expect.objectContaining({ id: mockUsers[0].id, __TEST__password: newPassword })
-        ]));
+        expect(mockWriteData).toHaveBeenCalledWith(ADMINS_REPO_NAME, expect.any(Array));
+        const expectedObject = mockWriteData.mock.calls[0][1].find(
+            (obj) => obj.id === mockAdmins[0].id
+        );
+        expect(expectedObject._secret.__TEST__password).toBe(newPassword);
+        expect(expectedObject._secret.hashedPassword).not.toBe(newPassword);
+        expect(expectedObject._secret.hashedPassword).not.toBe(prevSecret.hashedPassword);
+        expect(expectedObject._secret.__TEST__password).not.toBe(prevSecret.__TEST__password);
     });
 
     it.each([
@@ -128,7 +130,7 @@ describe('Change password', () => {
     ])('Should successfully update different passwords: %p', async (newPassword) => {
         const mockWriteData = jest.fn(() => Promise.resolve());
         jest.spyOn(data, 'writeData').mockImplementation(mockWriteData);
-        const prevHashedPassword = mockCredentials[0].hashedPassword;
+        const prevHashedPassword = mockAdmins[0]._secret.hashedPassword;
         const response = await supertest(server).post(apiEndpoint)
             .set('Authorization', `Bearer ${session.accessToken}`)
             .send({
@@ -139,9 +141,13 @@ describe('Change password', () => {
         expect(response.body.error).toBeUndefined();
         expect(response.body.message).toBe(ApiSuccessFactory.passwordUpdated());
 
-        const { hashedPassword: updatedHashedPassword } = mockWriteData
+        const { 
+            _secret: {
+                hashedPassword: updatedHashedPassword 
+            }
+        } = mockWriteData
             .mock.calls[0][1]
-            .find((obj) => obj.id === mockUsers[0].id) ?? {};
+            .find((obj) => obj.id === mockAdmins[0].id) ?? {};
 
         expect(updatedHashedPassword).toBeDefined();
         expect(updatedHashedPassword).not.toBe(prevHashedPassword);

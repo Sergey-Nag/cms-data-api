@@ -1,57 +1,59 @@
-const mockUsers = require('../../__mocks__/users.json');
+const mockAdmins = require('../../__mocks__/admins.json');
 const {readData} = require('../../../data/index.js');
 const server = require('../../../index');
 const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
+const { mockSessionForUser } = require('../../utils');
 const SessionManager = require('../../../managers/SessionManager');
 
-
 jest.mock('../../../data/index.js', () => ({
-    readData: jest.fn().mockResolvedValue(mockUsers),
+    readData: jest.fn().mockResolvedValue(mockAdmins),
     writeData: jest.fn((data) => data),
 }));
 
-describe('users query', () => {
+describe('admin query', () => {
     let userWithAccessToken, userWithoutAccessToken;
     const session = new SessionManager();
 
     beforeAll(() => {
-        const first = session.createSession(mockUsers[0].id);
-        const second = session.createSession(mockUsers[1].id);
+        const first = session.createSession(mockAdmins[0].id);
+        const second = session.createSession(mockAdmins[1].id);
         userWithAccessToken = first.accessToken;
         userWithoutAccessToken = second.accessToken;
     });
 
     afterAll(() => {
-        session.endSession(mockUsers[0].id);
-        session.endSession(mockUsers[1].id);
+        session.endSession(mockAdmins[0].id);
+        session.endSession(mockAdmins[1].id);
     });
 
-    afterEach(() => {
+    beforeAll(() => {
         jest.clearAllMocks();
     });
-
+    
     it('Should get unauthorized error if requests without Auth header', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
-                query: `{
-                    users {
+                query: `query {
+                    admin(
+                        find: { id: "${mockAdmins[2].id}" }
+                    ) {
                         id
                     }
                 }`
             });
 
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.unauthorized().message);
-        expect(response.body.data.users).toBeNull();
+        expect(response.body.data.admin).toBeNull();
     });
 
-    it('Should get list of users with all params', async () => {
+    it('Should get user itself by id with all params and isOnline true when session is active while has access', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `{
-                    users {
+                    admin(find: { id: "${mockAdmins[0].id}"}) {
                         id
                         firstname
                         lastname
@@ -65,21 +67,24 @@ describe('users query', () => {
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canEdit {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canDelete {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                         }
                         createdBy {
@@ -87,108 +92,130 @@ describe('users query', () => {
                             firstname
                             lastname
                         }
+                        modifiedBy {
+                            id
+                        }
                     }
                 }
                 `
             });
-
         expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.users).toBeDefined();
-        expect(response.body.data.users.length).toBe(5);
-
-        expect(response.body.data.users[0].permissions).toEqual(mockUsers[0].permissions);
-        expect(response.body.data.users[1].permissions).toEqual(mockUsers[1].permissions);
-
-        expect(response.body.data.users[0].createdBy).toBeNull();
-        const { id, firstname, lastname } = mockUsers[0];
-        expect(response.body.data.users[1].createdBy).toEqual({ id, firstname, lastname });
+        expect(response.body.data.admin).toBeDefined();
+        const { createdById, modifiedById, _secret, ...userData} = mockAdmins[0];
+        expect(response.body.data.admin).toEqual({
+            ...userData,
+            modifiedBy: null,
+            isOnline: true,
+            createdBy: null
+        });
     });
-
+    
     it('Should get Action forbidden error when action user has no access', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithoutAccessToken}`)
             .send({
                 query: `
-                {
-                    users {
-                        id
+                    {
+                        admin(find: { id: "${mockAdmins[0].id}" }) {
+                            id
+                            createdBy {
+                                id
+                            }
+                        }
                     }
-                }
                 `
             });
 
-        expect(response.body.data.users).toBeNull();
+        expect(response.body.data.admin).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.actionForbidden().message);
     });
 
-    it('Should get an empty array when users are not found', async () => {
+    it('Should get error when user is not found', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `
-                {
-                    users(id: "test-id-that-shouldnt-exist") {
-                        id
+                    {
+                        admin(find: { id: "test-id-that-shouldnt-exist" }) {
+                            id
+                            createdBy {
+                                id
+                            }
+                        }
                     }
-                }
                 `
             });
 
+        expect(response.body.data.admin).toBeNull();
+        expect(response.body.errors).toBeDefined();
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.userNotFound().message);
+    });
+
+    it('Should get null when user is not found without query data', async () => {
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
+            .send({
+                query: `
+                    {
+                        admin(find: {}) {
+                            id
+                            createdBy {
+                                id
+                            }
+                        }
+                    }
+                `
+            });
+
+        expect(response.body.data.admin).toBeNull();
         expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.users).toBeDefined();
-        expect(response.body.data.users.length).toBe(0);
     });
 
     it.each([
-        ['1 user by id', `id: "${mockUsers[1].id}"`, [mockUsers[1]]],
-        ['2 users by firstname', `firstname: "joh"`, [mockUsers[1], mockUsers[4]]],
+        ['by firstname', `firstname: "joh"`, mockAdmins[0]],
         [
-            '1 user by createdById and email', 
-            `createdById: "test-2" email: "eleanor.j@example.com"`, 
-            [mockUsers[3]]
+            'by createdById and email', 
+            `createdById: "${mockAdmins[0].id}" email: "${mockAdmins[4].email}"`, 
+            mockAdmins[4]
         ],
         [
-            '3 users that have edit products permissions',
+            'that has edit products permissions',
             `permissions: { canEdit: { products: true } }`,
-            [mockUsers[0], mockUsers[3], mockUsers[4]]
+            mockAdmins[0]
         ],
         [
-            '1 user that have different permissions to see data',
+            'that has different permissions to see data',
             `permissions: { 
                 canSee: {
-                    analytics: true,
-                    products: true,
-                    orders: false,
-                    pages: true,
-                    users: false
+                    analytics: false
+                    products: true
+                    orders: false
+                    pages: true
+                    admins: false
+                    customers: true
                 }
             }`,
-            [mockUsers[4]]
+            mockAdmins[4]
         ],
         [
-            '2 users that currently online',
+            'that is currently online',
             'isOnline: true',
-            [mockUsers[0], mockUsers[1]]
+            mockAdmins[0]
         ],
         [
-            '3 users that currently offline',
+            'that is currently offline',
             'isOnline: false',
-            [mockUsers[2], mockUsers[3], mockUsers[4]]
-        ],
-        [
-            '1 user without created by anyome',
-            'createdById: null',
-            [mockUsers[0]]
-        ],
-    ])('Filter should get %s', async (_, query, expectedUsers) => {
+            mockAdmins[2]
+        ]
+    ])('Should get user %s', async (_, query, expectedUser) => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `
                 {
-                    users(
-                        ${query}
+                    admin(
+                        find: {${query}}
                     ) {
                         id
                         firstname
@@ -199,10 +226,9 @@ describe('users query', () => {
             });
 
         expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.users).toBeDefined();
-        expect(response.body.data.users.length).toBe(expectedUsers.length);
+        expect(response.body.data.admin).toBeDefined();
 
-        const expected = expectedUsers.map(({id, firstname, email}) => ({ id, firstname, email }));
-        expect(response.body.data.users).toEqual(expected);
+        const { id, firstname, email } = expectedUser;
+        expect(response.body.data.admin).toEqual({ id, firstname, email });
     });
 });

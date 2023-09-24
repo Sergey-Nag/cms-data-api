@@ -10,7 +10,7 @@ const PagesFilterInput = new GraphQLInputObjectType({
         title: { type: GraphQLString },
         createdISO: { type: GraphQLString },
         createdById: { type: GraphQLString },
-        modifiedBy: {type: GraphQLString },
+        modifiedById: {type: GraphQLString },
         lastModifiedISO: { type: GraphQLString },
     }
 })

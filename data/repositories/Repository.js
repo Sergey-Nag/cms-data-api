@@ -1,20 +1,15 @@
-const isEmpty = require('lodash/isEmpty');
 const { readData, writeData } = require('..');
-const DataFilter = require('../_filter/DataFilter');
-const DataFinder = require('../_filter/DataFinder');
 
 class Repository {
     constructor(dataName) {
         this.dataName = dataName;
         this.data = [];
     }
-    getAll(queryData, isExact) {
-        if (isEmpty(queryData)) return this.data;
-        return this.#filter(queryData, isExact);
+    getAll() {
+        return this.data;
     }
-    get(queryData, isExact) {
-        if (isEmpty(queryData)) return null;
-        return this.#find(queryData, isExact);
+    get(find) {
+        return this.data.find(find) ?? null;
     }
     add(data) {
         this.data.push(data);
@@ -28,7 +23,7 @@ class Repository {
         const deletedData = this.data.splice(index, 1);
         return deletedData;
     }
-    edit(id, data) {
+    update(id, data) {
         const index = this.data.findIndex(data => data.id === id);
 
         if (index === -1) return false;
@@ -39,18 +34,6 @@ class Repository {
     }
     exist(id) {
         return this.data.findIndex((data) => data.id === id) !== -1;
-    }
-
-    #filter(queryOptions, isExact) {
-        const dataFilter = new DataFilter(queryOptions, isExact);
-        const filteredData = dataFilter.find(this.data);
-        return filteredData;
-    }
-
-    #find(queryOptions, isExact) {
-        const dataFinder = new DataFinder(queryOptions, isExact);
-        const foundData = dataFinder.find(this.data);
-        return foundData;
     }
 
     async load() {

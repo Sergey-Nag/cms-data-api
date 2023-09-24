@@ -1,11 +1,12 @@
 const express = require('express');
 const UserAuthenticationService = require('../services/UserAuthenticationService');
 const SessionManager = require('../managers/SessionManager');
-const {authenticateRequiredMiddleware, authenticateMiddleware, accessTokenOnlyMiddleware} = require('../middlewares/authenticateMiddleware');
+const { authenticateRequiredMiddleware, authenticateMiddleware, accessTokenOnlyMiddleware } = require('../middlewares/authenticateMiddleware');
 const ApiErrorFactory = require('../utils/ApiErrorFactory');
 const ApiSuccessFactory = require('../utils/ApiSuccessFactory');
-const { UserRepository, UserCredentialsRepository } = require('../data/repositories');
 const { ADMIN_ID } = require('../constants/env');
+const Repository = require('../data/repositories/Repository');
+const { ADMINS_REPO_NAME } = require('../constants/repositoryNames');
 const router = express.Router();
 
 /**
@@ -53,14 +54,14 @@ router.post('/login', async (req, res) => {
         if (!req.body) {
             throw ApiErrorFactory.dataNotProvided();
         }
-        
+
         const { email, password } = req.body;
 
         const user = await UserAuthenticationService.authenticateUser(
             email,
             password
         );
-        
+
         const sessions = new SessionManager();
         const tokens = sessions.createSession(user.id);
 
@@ -102,12 +103,6 @@ router.post('/logout', [authenticateRequiredMiddleware, accessTokenOnlyMiddlewar
     try {
         const userId = req.userId;
         await UserAuthenticationService.logoutUser(userId);
-        const sessions = new SessionManager();
-        if (!sessions.getSession(userId)) {
-            throw ApiErrorFactory.unauthorized();
-        }
-
-        sessions.endSession(userId);
 
         res.status(200).json({ message: ApiSuccessFactory.loggerOut() });
     } catch (error) {
@@ -153,7 +148,7 @@ router.post('/logout', [authenticateRequiredMiddleware, accessTokenOnlyMiddlewar
  *      scheme: bearer
  */
 router.post('/change-password', [authenticateRequiredMiddleware, accessTokenOnlyMiddleware, (req, res, next) => {
-    try {        
+    try {
         if (!req.userId) {
             throw ApiErrorFactory.unauthorized();
         }
@@ -164,7 +159,7 @@ router.post('/change-password', [authenticateRequiredMiddleware, accessTokenOnly
         if (!session) {
             throw ApiErrorFactory.unauthorized();
         }
-    } catch(e) {
+    } catch (e) {
         return res.status(401).json({ error: e.message });
     }
     next();
@@ -181,7 +176,6 @@ router.post('/change-password', [authenticateRequiredMiddleware, accessTokenOnly
         if (!isUpdated) {
             throw ApiErrorFactory.somethingWentWrong();
         }
-    
         res.status(200).json({ message: ApiSuccessFactory.passwordUpdated() });
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -189,51 +183,48 @@ router.post('/change-password', [authenticateRequiredMiddleware, accessTokenOnly
 });
 
 if (process.env.NODE_ENV !== 'production') {
-    
-/**
- * @openapi
- * /quick-login-admin:
- *   post:
- *     summary: Authenticate a user
- *     tags:
- *       - Authentication
- *     responses:
- *       '200':
- *         description: Returns user and tokens
- *       '401':
- *         description: Unauthorized
- *         schema:
- *           type: object
- *           properties:
- *             error:
- *               type: string
- *         example:
- *           error: Authentication failed
- */
+
+    /**
+     * @openapi
+     * /quick-login-admin:
+     *   post:
+     *     summary: Authenticate a user
+     *     tags:
+     *       - Authentication
+     *     responses:
+     *       '200':
+     *         description: Returns user and tokens
+     *       '401':
+     *         description: Unauthorized
+     *         schema:
+     *           type: object
+     *           properties:
+     *             error:
+     *               type: string
+     *         example:
+     *           error: Authentication failed
+     */
     router.post('/quick-login-admin', async (req, res) => {
         try {
-            const usersRepo = new UserRepository();
-            const usersCred = new UserCredentialsRepository();
-            await usersRepo.load();
-            await usersCred.load();
+            const repo = new Repository(ADMINS_REPO_NAME)
+            await repo.load();
 
-            const { email, id } = usersRepo.get({ id: ADMIN_ID });
-            const {__TEST__password} = usersCred.get({ id });
+            const { email, _secret: { __TEST__password } } = repo.data.find(({ id }) => id === ADMIN_ID);
 
             const user = await UserAuthenticationService.authenticateUser(
                 email,
                 __TEST__password
             );
-            
+
             const sessions = new SessionManager();
             const tokens = sessions.createSession(user.id);
 
-            res.status(200).json({user, tokens});
+            res.status(200).json({ user, tokens });
         } catch (error) {
             res.status(401).json({ error: error.message });
         }
     });
-} 
+}
 
 
 module.exports = router;

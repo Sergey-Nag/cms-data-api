@@ -1,3 +1,4 @@
+const { isNil } = require("lodash");
 const { ISO_DATE_REGEXP } = require("../../../../constants/regexp");
 
 class CompareFactory {
@@ -40,7 +41,7 @@ class Sorter {
     }
 
     compare(a, b) {
-        if (a === undefined || b === undefined) return undefined;
+        if (isNil(a) || isNil(b)) return undefined;
 
         if (CompareFactory.isNumbers(a, b)) {
             return CompareFactory.numbers(a, b);

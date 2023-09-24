@@ -1,0 +1,202 @@
+[
+    {
+        "id": "test-id-1",
+        "createdById": null,
+        "createdISO": "2023-09-21T10:10:10.497Z",
+        "modifiedById": null,
+        "lastModifiedISO": null,
+        "firstname": "John",
+        "lastname": "Doe",
+        "email": "johndoe@example.com",
+        "permissions": {
+            "canSee": {
+                "analytics": true,
+                "products": true,
+                "orders": true,
+                "pages": true,
+                "admins": true,
+                "customers": true
+            },
+            "canEdit": {
+                "analytics": true,
+                "products": true,
+                "orders": true,
+                "pages": true,
+                "admins": true,
+                "customers": true
+            },
+            "canDelete": {
+                "analytics": true,
+                "products": true,
+                "orders": true,
+                "pages": true,
+                "admins": true,
+                "customers": true
+            }
+        },
+        "_secret": {
+            "hashedPassword": "$2b$04$DKukrGlEYV3eHOC4epp2I.eLkscGQKhOk39iLe/KWqQQv32BLf.iq",
+            "__TEST__password": "sergeyTest123"
+        }
+    },
+    {
+        "id": "test-id-2",
+        "createdById": "test-id-1",
+        "createdISO": "2023-09-23T13:16:56.578Z",
+        "modifiedById": "test-id-1",
+        "lastModifiedISO": "2023-09-23T15:16:56.578Z",
+        "firstname": "Johnny",
+        "lastname": null,
+        "email": "new@test.dd",
+        "permissions": {
+            "canSee": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "admins": false,
+                "customers": false
+            },
+            "canEdit": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "admins": false,
+                "customers": false
+            },
+            "canDelete": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "admins": false,
+                "customers": false
+            }
+        },
+        "_secret": {
+            "hashedPassword": "$2b$04$lQKpLNnE7Oi9N7Yti10PjOWFu1r8c2g27kk7ZHRY2/glGt.4QY7AS",
+            "__TEST__password": "test123"
+        }
+    },
+    {
+        "id": "test-id-3",
+        "createdById": "test-id-1",
+        "createdISO": "2023-09-23T13:16:56.578Z",
+        "modifiedById": null,
+        "lastModifiedISO": null,
+        "firstname": "Seth",
+        "lastname": "Riley",
+        "email": "seth@example.com",
+        "permissions": {
+            "canSee": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "admins": false,
+                "customers": false
+            },
+            "canEdit": {
+                "analytics": false,
+                "products": true,
+                "orders": false,
+                "pages": false,
+                "admins": false,
+                "customers": false
+            },
+            "canDelete": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "admins": false,
+                "customers": false
+            }
+        },
+        "_secret": {
+            "hashedPassword": "$2b$04$lQKpLNnE7Oi9N7Yti10PjOWFu1r8c2g27kk7ZHRY2/glGt.4QY7AS",
+            "__TEST__password": "test123"
+        }
+    },
+    {
+        "id": "test-id-4",
+        "createdById": "test-id-1",
+        "createdISO": "2023-09-23T13:16:56.578Z",
+        "modifiedById": "test-id-2",
+        "lastModifiedISO": "2023-09-23T19:00:00.578Z",
+        "firstname": "Jim",
+        "lastname": "Halpert",
+        "email": "jim@dunder-mifflin.com",
+        "permissions": {
+            "canSee": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "admins": false,
+                "customers": false
+            },
+            "canEdit": {
+                "analytics": false,
+                "products": true,
+                "orders": false,
+                "pages": false,
+                "admins": false,
+                "customers": false
+            },
+            "canDelete": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "admins": false,
+                "customers": false
+            }
+        },
+        "_secret": {
+            "hashedPassword": "$2b$04$lQKpLNnE7Oi9N7Yti10PjOWFu1r8c2g27kk7ZHRY2/glGt.4QY7AS",
+            "__TEST__password": "test123"
+        }
+    },
+    {
+        "id": "test-id-5",
+        "createdById": "test-id-1",
+        "createdISO": "2023-09-23T13:16:56.578Z",
+        "modifiedById": null,
+        "lastModifiedISO": null,
+        "firstname": "Amanda",
+        "lastname": null,
+        "email": "amanda@ada.com",
+        "permissions": {
+            "canSee": {
+                "analytics": false,
+                "products": true,
+                "orders": false,
+                "pages": true,
+                "admins": false,
+                "customers": true
+            },
+            "canEdit": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "admins": false,
+                "customers": false
+            },
+            "canDelete": {
+                "analytics": false,
+                "products": false,
+                "orders": false,
+                "pages": false,
+                "admins": false,
+                "customers": false
+            }
+        },
+        "_secret": {
+            "hashedPassword": "$2b$04$lQKpLNnE7Oi9N7Yti10PjOWFu1r8c2g27kk7ZHRY2/glGt.4QY7AS",
+            "__TEST__password": "test123"
+        }
+    }
+]

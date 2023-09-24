@@ -1,11 +1,5 @@
-const { USERS_REPO_NAME } = require('../constants/repositoryNames');
-const { readData } = require('../data/index');
+const { DEFAULT_PERMISSIONS } = require('../constants/defaults');
 const ApiErrorFactory = require('../utils/ApiErrorFactory');
-
-const loadUserById = async (id) => {
-    const users = await readData(USERS_REPO_NAME);
-    return users.find((user) => user.id === id);
-}
 
 const authProtect = (fn) => {
     return (...args) => {
@@ -17,7 +11,54 @@ const authProtect = (fn) => {
     }
 }
 
+/**
+* @param {keyof DEFAULT_PERMISSIONS} permission - The permission key to check.
+* @param {Function} fn - The function to execute if the permission check passes.
+* @returns {Function} - A protected function that checks the permission before executing fn.
+*/
+const canEditProtect = (permission, fn) => {
+    return (...args) => {
+        if (args[2].actionUser && !args[2].actionUser.permissions.canEdit[permission]) {
+            throw ApiErrorFactory.actionForbidden();
+        }
+
+        return fn(...args);
+    }
+}
+
+/**
+* @param {keyof DEFAULT_PERMISSIONS} permission - The permission key to check.
+* @param {Function} fn - The function to execute if the permission check passes.
+* @returns {Function} - A protected function that checks the permission before executing fn.
+*/
+const canSeeProtect = (permission, fn) => {
+    return (...args) => {
+        if (args[2].actionUser && !args[2].actionUser.permissions.canSee[permission]) {
+            throw ApiErrorFactory.actionForbidden();
+        }
+
+        return fn(...args);
+    }
+}
+
+/**
+* @param {keyof DEFAULT_PERMISSIONS} permission - The permission key to check.
+* @param {Function} fn - The function to execute if the permission check passes.
+* @returns {Function} - A protected function that checks the permission before executing fn.
+*/
+const canDeleteProtect = (permission, fn) => {
+    return (...args) => {
+        if (args[2].actionUser && !args[2].actionUser.permissions.canDelete[permission]) {
+            throw ApiErrorFactory.actionForbidden();
+        }
+
+        return fn(...args);
+    }
+}
+
 module.exports = {
-    loadUserById,
     authProtect,
+    canSeeProtect,
+    canEditProtect,
+    canDeleteProtect,
 };

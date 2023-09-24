@@ -1,20 +1,17 @@
 const server = require('../../index.js');
 const supertest = require('supertest');
 const data = require('../../data/index.js');
-const mockUsers = require('../__mocks__/users.json');
-const mockCredentials = require('../__mocks__/user-credentials.json');
+const mockAdmins = require('../__mocks__/admins.json');
 const { REST_ENDPOINT } = require('../constants.js');
 const ApiErrorFactory = require('../../utils/ApiErrorFactory.js');
 const SessionManager = require('../../managers/SessionManager.js');
-const { USERS_REPO_NAME } = require('../../constants/repositoryNames.js');
-const mockUsersRepoName = USERS_REPO_NAME;
+const { ADMINS_REPO_NAME } = require('../../constants/repositoryNames.js');
+const mockAdminsRepoName = ADMINS_REPO_NAME;
 jest.mock('../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((dataName) => {
-        if (dataName === mockUsersRepoName) {
-            return mockUsers;
+        if (dataName === mockAdminsRepoName) {
+            return mockAdmins;
         }
-
-        return mockCredentials;
     }),
     writeData: jest.fn((data) => data),
 }));
@@ -35,8 +32,8 @@ describe('REST /login', () => {
     it('Should login user with proper credentials, start session and return tokens', async () => {
         jest.spyOn(SessionManager.prototype, 'createSession').mockImplementation(mockFn);
         const userCredentials = {
-            email: mockUsers[0].email,
-            password: mockCredentials[0].__TEST__password
+            email: mockAdmins[0].email,
+            password: mockAdmins[0]._secret.__TEST__password
         }
 
         const response = await supertest(server).post(loginEndpoint)
@@ -46,7 +43,7 @@ describe('REST /login', () => {
         expect(response.body.error).toBeUndefined();
         expect(response.body.accessToken).toBeDefined();
         expect(response.body.refreshToken).toBeDefined();
-        expect(mockFn).toHaveBeenCalledWith(mockUsers[0].id);
+        expect(mockFn).toHaveBeenCalledWith(mockAdmins[0].id);
     });
 
     it.each([
@@ -77,17 +74,16 @@ describe('REST /login', () => {
         ],
         [
             'Invalid credentials if user exists but password is wrong',
-            { email: mockUsers[1].email, password: 'wrong-passwOrd' },
+            { email: mockAdmins[1].email, password: 'wrong-passwOrd' },
             ApiErrorFactory.userCredentialsInvalid(),
         ],
         [
             'Invalid credentials if user exists but password from another user',
-            { email: mockUsers[1].email, password: mockCredentials[0].__TEST__password },
+            { email: mockAdmins[1].email, password: mockAdmins[0]._secret.__TEST__password },
             ApiErrorFactory.userCredentialsInvalid(),
         ],
     ])('Should get error: %s ', async (_name, data, error) => {
         jest.spyOn(SessionManager.prototype, 'createSession').mockImplementation(mockFn);
-
         const response = await supertest(server).post(loginEndpoint)
             .send(data)
             .expect(401);

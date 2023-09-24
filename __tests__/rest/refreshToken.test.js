@@ -1,6 +1,6 @@
 const supertest = require('supertest');
 const server = require('../../index.js');
-const mockUsers = require('../__mocks__/users.json');
+const mockAdmins = require('../__mocks__/admins.json');
 const ApiErrorFactory = require("../../utils/ApiErrorFactory");
 const { REST_ENDPOINT } = require('../constants');
 const SessionManager = require('../../managers/SessionManager');
@@ -10,18 +10,18 @@ const { SECRET_REFRESH_TOKEN, SECRET_ACCESS_TOKEN } = require('../../constants/e
 const refreshEndpoint = `${REST_ENDPOINT}/refresh-token`;
 
 describe('Refresh token', () => {
-    const expiredRefreshToken = jwt.sign({ userId: mockUsers[0].id}, SECRET_REFRESH_TOKEN, { expiresIn: '0s' });
+    const expiredRefreshToken = jwt.sign({ userId: mockAdmins[0].id}, SECRET_REFRESH_TOKEN, { expiresIn: '0s' });
     const notUserRefreshToken = jwt.sign({some: 'data'}, SECRET_REFRESH_TOKEN, { expiresIn: '1m' });
     const nonexistendUserRefreshToken = jwt.sign({ userId: 'not-existed-user-id' }, SECRET_REFRESH_TOKEN, { expiresIn: '1m' });
 
     let session;
     beforeEach(() => {
         const sessions = new SessionManager();
-        session = sessions.createSession(mockUsers[0].id);
+        session = sessions.createSession(mockAdmins[0].id);
     });
     afterEach(() => {
         const sessions = new SessionManager();
-        sessions.endSession(mockUsers[0].id);
+        sessions.endSession(mockAdmins[0].id);
     });
 
     it('Should get Token has not been provided error when request without Auth header', async() => {
@@ -67,7 +67,7 @@ describe('Refresh token', () => {
     });
 
     it('Should not get error on access token expired then update session and return new access token', async () => {
-        const expiredAccessToken = jwt.sign({ userId: mockUsers[0].id}, SECRET_ACCESS_TOKEN, { expiresIn: '0s' });
+        const expiredAccessToken = jwt.sign({ userId: mockAdmins[0].id}, SECRET_ACCESS_TOKEN, { expiresIn: '0s' });
         const oldAccessToken = expiredAccessToken;
         const oldRefreshToken = session.refreshToken;
         const response = await supertest(server).post(refreshEndpoint)
@@ -119,7 +119,7 @@ describe('Refresh token', () => {
         
         expect(response.body.error).toBeUndefined();
         expect(response.body.accessToken).not.toBe(oldAccessToken);
-        session = new SessionManager().getSession(mockUsers[0].id);
+        session = new SessionManager().getSession(mockAdmins[0].id);
 
         expect(session.accessToken).toBe(response.body.accessToken);
     });

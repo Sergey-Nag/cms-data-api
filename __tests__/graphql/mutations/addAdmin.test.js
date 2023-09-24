@@ -1,6 +1,5 @@
-const mockUsers = require('../../__mocks__/users.json');
+const mockAdmins = require('../../__mocks__/admins.json');
 const mockPages = require('../../__mocks__/pages.json');
-const mockCredentials = require('../../__mocks__/user-credentials.json');
 const data = require('../../../data/index.js');
 const server = require('../../../index');
 const uniqid = require('uniqid');
@@ -9,20 +8,17 @@ const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const { expectUserData } = require('../utils');
 const SessionManager = require('../../../managers/SessionManager');
-const { USERS_REPO_NAME, PAGES_REPO_NAME, USER_CREDS_REPO_NAME } = require('../../../constants/repositoryNames');
-const mockUsersRepoName = USERS_REPO_NAME;
+const { PAGES_REPO_NAME, USER_CREDS_REPO_NAME, ADMINS_REPO_NAME } = require('../../../constants/repositoryNames');
+const mockAdminsRepoName = ADMINS_REPO_NAME;
 const mockPagesRepoName = PAGES_REPO_NAME;
-const mockCredsRepoName = USER_CREDS_REPO_NAME;
 
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === mockUsersRepoName) {
-            return Promise.resolve(mockUsers);
+        if (name === mockAdminsRepoName) {
+            return Promise.resolve(mockAdmins);
         } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
-        } else if (name === mockCredsRepoName) {
-            return Promise.resolve(mockCredentials);
         }
     }),
     writeData: jest.fn(),
@@ -32,7 +28,7 @@ const MOCK_ISO_TIME = '2023-09-02T19:30:36.258Z'
 Date.prototype.toISOString = jest.fn(() => MOCK_ISO_TIME);
 
 
-describe('addUser mutation', () => {
+describe('Add entity mutation (addAdmin)', () => {
     const mockWriteDataFn = jest.fn();
     const MOCK_UNIQID = 'Useruniq';
     jest.spyOn(data, 'writeData').mockImplementation(mockWriteDataFn);
@@ -42,15 +38,15 @@ describe('addUser mutation', () => {
     const session = new SessionManager();
 
     beforeAll(() => {
-        const first = session.createSession(mockUsers[0].id);
-        const second = session.createSession(mockUsers[1].id);
+        const first = session.createSession(mockAdmins[0].id);
+        const second = session.createSession(mockAdmins[1].id);
         userWithAccessToken = first.accessToken;
         userWithoutAccessToken = second.accessToken;
     });
 
     afterAll(() => {
-        session.endSession(mockUsers[0].id);
-        session.endSession(mockUsers[1].id);
+        session.endSession(mockAdmins[0].id);
+        session.endSession(mockAdmins[1].id);
     });
 
     beforeEach(() => {
@@ -61,10 +57,12 @@ describe('addUser mutation', () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `mutation {
-                    addUser(
-                        firstname: "test"
-                        lastname: "test"
-                        email: "test"
+                    addAdmin(
+                        input: {
+                            firstname: "test"
+                            lastname: "test"
+                            email: "test"
+                        }
                     ) {
                         id
                     }
@@ -72,24 +70,49 @@ describe('addUser mutation', () => {
             });
 
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.unauthorized().message);
-        expect(response.body.data.addUser).toBeNull();
+        expect(response.body.data.addAdmin).toBeNull();
     });
 
-    it('Should save credentials and user with proper values (without permissions) by user that has access and return it', async () => {
+    it('Should get Action forbidden error when action user has no access', async () => {
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${userWithoutAccessToken}`)
+            .send({
+                query: `mutation {
+                    addAdmin(
+                        input: {
+                            firstname: ""
+                            email: "some@email.com"
+                        }
+                    ) {
+                        id
+                        lastname
+                    }
+                }`
+            });
+
+        expect(response.body.data.addAdmin).toBeNull();
+        expect(response.body.errors).toBeDefined();
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.actionForbidden().message);
+        expect(mockWriteDataFn).not.toHaveBeenCalledWith(ADMINS_REPO_NAME);
+    });
+
+    it('Should save user with proper values (without permissions) by user that has access and return it', async () => {
         const enteredData = {
             firstname: 'Test',
             lastname: 'User 1',
             email: 'testu1@mail.com',
-            createdById: mockUsers[0].id,
+            createdById: mockAdmins[0].id,
         };
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
-                    addUser(
-                        firstname: "${enteredData.firstname}"
-                        lastname: "${enteredData.lastname}"
-                        email: "${enteredData.email}"
+                    addAdmin(
+                        input: {
+                            firstname: "${enteredData.firstname}"
+                            lastname: "${enteredData.lastname}"
+                            email: "${enteredData.email}"
+                        }
                     ) {
                         id
                         firstname
@@ -104,21 +127,24 @@ describe('addUser mutation', () => {
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canEdit {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canDelete {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                         }
                         createdBy {
@@ -129,12 +155,13 @@ describe('addUser mutation', () => {
             });
 
         expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.addUser).toBeDefined();
+        expect(response.body.data.addAdmin).toBeDefined();
 
         const expectedData = {
             ...enteredData,
             id: MOCK_UNIQID,
             createdISO: MOCK_ISO_TIME,
+            modifiedById: null,
             lastModifiedISO: null,
             permissions: {
                 canSee: {
@@ -142,46 +169,55 @@ describe('addUser mutation', () => {
                     products: false,
                     orders: false,
                     pages: false,
-                    users: false,
+                    admins: false,
+                    customers: false,
                 },
                 canEdit: {
                     analytics: false,
                     products: false,
                     orders: false,
                     pages: false,
-                    users: false,
+                    admins: false,
+                    customers: false,
                 },
                 canDelete: {
                     analytics: false,
                     products: false,
                     orders: false,
                     pages: false,
-                    users: false,
+                    admins: false,
+                    customers: false,
                 },
             }
         }
 
-        const { addUser } = response.body.data;
-        expectUserData(addUser, expectedData);
-        expect(mockUsers).toContainEqual(expectedData);
-        expect(mockWriteDataFn).toHaveBeenCalledWith(USERS_REPO_NAME, mockUsers);
-        expect(mockWriteDataFn).toHaveBeenCalledWith(USER_CREDS_REPO_NAME, expect.arrayContaining([
-            expect.objectContaining({ id: response.body.data.addUser.id })
-        ]));
+        const { addAdmin } = response.body.data;
+        expectUserData(addAdmin, expectedData);
+        expect(mockAdmins).toContainEqual(
+            expect.objectContaining({
+                id: addAdmin.id,
+                firstname: addAdmin.firstname,
+                lastname: addAdmin.lastname,
+                permissions: addAdmin.permissions,
+                createdById: addAdmin.createdBy.id
+            })
+        )
+        expect(mockWriteDataFn).toHaveBeenCalledWith(ADMINS_REPO_NAME, mockAdmins);
     });
 
-    it('Should save credentials and user with permissions by user that has access and return it', async () => {
+    it('Should save user with permissions by user that has access and return it', async () => {
         const enteredData = {
             firstname: 'Test',
             lastname: 'User 1',
             email: 'new.user.email1@mail.com',
-            createdById: mockUsers[0].id,
+            createdById: mockAdmins[0].id,
             permissions: {
                 canSee: {
                     analytics: true,
                     products: true,
                     pages: true,
-                    users: false,
+                    admins: false,
+                    customers: true,
                     orders: false,
                 },
                 canEdit: {
@@ -200,11 +236,13 @@ describe('addUser mutation', () => {
                     permissions: enteredData.permissions,
                 },
                 query: `mutation addUser($permissions: UserPermissionsInput) {
-                    addUser(
-                        firstname: "${enteredData.firstname}"
-                        lastname: "${enteredData.lastname}"
-                        email: "${enteredData.email}"
-                        permissions: $permissions
+                    addAdmin(
+                        input: {
+                            firstname: "${enteredData.firstname}"
+                            lastname: "${enteredData.lastname}"
+                            email: "${enteredData.email}"
+                            permissions: $permissions
+                        }
                     ) {
                         id
                         permissions {
@@ -213,21 +251,24 @@ describe('addUser mutation', () => {
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canEdit {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canDelete {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                         }
                     }
@@ -235,59 +276,36 @@ describe('addUser mutation', () => {
             });
 
         expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.addUser).toBeDefined();
+        expect(response.body.data.addAdmin).toBeDefined();
 
-        expectUserData(response.body.data.addUser, { permissions: enteredData.permissions });
-        expect(mockWriteDataFn).toHaveBeenCalledWith('user-credentials', expect.arrayContaining([
-            expect.objectContaining({ id: response.body.data.addUser.id })
-        ]));
-        expect(mockWriteDataFn).toHaveBeenCalledWith(USERS_REPO_NAME, mockUsers);
+        expectUserData(response.body.data.addAdmin, { permissions: enteredData.permissions });
+        expect(mockWriteDataFn).toHaveBeenCalledWith(ADMINS_REPO_NAME, mockAdmins);
     });
 
     it('Should get user with same email exist error', async () => {
-        expect(mockUsers).toHaveLength(7);
+        expect(mockAdmins).toHaveLength(7);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${userWithoutAccessToken}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
-                    addUser(
-                        firstname: "test name"
-                        email: "johndoe@example.com"
+                    addAdmin(
+                        input: {
+                            firstname: "test name"
+                            email: "${mockAdmins[2].email}"
+                        }
                     ) {
                         id
+                        firstname
                         lastname
                     }
                 }`
             });
 
-        expect(response.body.data.addUser).toBeNull();
+        expect(response.body.data.addAdmin).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.userAlreadyExists('email').message);
-        expect(mockWriteDataFn).not.toHaveBeenCalledWith(USERS_REPO_NAME);
-        expect(mockWriteDataFn).not.toHaveBeenCalledWith('user-credentials');
-        expect(mockUsers).toHaveLength(7);
-    });
-
-    it('Should get Action forbidden error when action user has no access', async () => {
-        const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${userWithoutAccessToken}`)
-            .send({
-                query: `mutation {
-                    addUser(
-                        firstname: ""
-                        email: "some@email.com"
-                    ) {
-                        id
-                        lastname
-                    }
-                }`
-            });
-
-        expect(response.body.data.addUser).toBeNull();
-        expect(response.body.errors).toBeDefined();
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.actionForbidden().message);
-        expect(mockWriteDataFn).not.toHaveBeenCalledWith(USERS_REPO_NAME);
-        expect(mockWriteDataFn).not.toHaveBeenCalledWith('user-credentials');
+        expect(mockWriteDataFn).not.toHaveBeenCalledWith(ADMINS_REPO_NAME);
+        expect(mockAdmins).toHaveLength(7);
     });
 
     it.each([
@@ -303,8 +321,8 @@ describe('addUser mutation', () => {
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
-                    addUser(
-                        ${params}
+                    addAdmin(
+                        input: { ${params} }
                     ) {
                         id
                         lastname
@@ -312,7 +330,7 @@ describe('addUser mutation', () => {
                 }`
             });
 
-        expect(response.body.data.addUser).toBeNull();
+        expect(response.body.data.addAdmin).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(error.message);
 

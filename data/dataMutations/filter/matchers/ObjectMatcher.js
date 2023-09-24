@@ -1,3 +1,4 @@
+const ArrayMatcher = require("./ArrayMatcher");
 const Matcher = require("./Matcher");
 const NumberMatcher = require("./NumberMatcher");
 const StringMatcher = require("./StringMatcher");
@@ -10,6 +11,8 @@ class MatcherFactory {
             return new StringMatcher(propertyName, expectedValue, isPartialy);
         } else if (typeof expectedValue === "object" && !Array.isArray(expectedValue) && expectedValue !== null) {
             return new ObjectMatcher(propertyName, expectedValue);
+        } else if (Array.isArray(expectedValue)) {
+            return new ArrayMatcher(propertyName, expectedValue, isPartialy);
         }
         return new Matcher(propertyName, expectedValue);
     }

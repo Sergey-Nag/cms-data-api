@@ -1,6 +1,5 @@
-const mockUsers = require('../../__mocks__/users.json');
+const mockAdmins = require('../../__mocks__/admins.json');
 const mockPages = require('../../__mocks__/pages.json');
-const mockCredentials = require('../../__mocks__/user-credentials.json');
 const data = require('../../../data/index.js');
 const server = require('../../../index');
 const uniqid = require('uniqid');
@@ -9,26 +8,23 @@ const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const { expectUserData } = require('../utils');
 const SessionManager = require('../../../managers/SessionManager');
-const { USERS_REPO_NAME, USER_CREDS_REPO_NAME, PAGES_REPO_NAME } = require('../../../constants/repositoryNames');
-const mockUsersRepoName = USERS_REPO_NAME;
+const { USER_CREDS_REPO_NAME, PAGES_REPO_NAME, ADMINS_REPO_NAME } = require('../../../constants/repositoryNames');
+const mockAdminsRepoName = ADMINS_REPO_NAME;
 const mockPagesRepoName = PAGES_REPO_NAME;
-const mockCredsRepoName = USER_CREDS_REPO_NAME;
 
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === mockUsersRepoName) {
-            return Promise.resolve(mockUsers);
+        if (name === mockAdminsRepoName) {
+            return Promise.resolve(mockAdmins);
         } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
-        } else if (name === mockCredsRepoName) {
-            return Promise.resolve(mockCredentials);
         }
     }),
     writeData: jest.fn(),
 }));
 
-describe('deleteUser mutation', () => {
+describe('Delete entity mutation (deleteAdmin)', () => {
     const mockWriteDataFn = jest.fn();
     const MOCK_UNIQID = 'Pageuniqid';
     uniqid.mockReturnValue(MOCK_UNIQID);
@@ -38,28 +34,27 @@ describe('deleteUser mutation', () => {
     const session = new SessionManager();
 
     beforeAll(() => {
-        const first = session.createSession(mockUsers[0].id);
-        const second = session.createSession(mockUsers[1].id);
+        const first = session.createSession(mockAdmins[0].id);
+        const second = session.createSession(mockAdmins[1].id);
         userWithAccessToken = first.accessToken;
         userWithoutAccessToken = second.accessToken;
     });
 
     afterAll(() => {
-        session.endSession(mockUsers[0].id);
-        session.endSession(mockUsers[1].id);
+        session.endSession(mockAdmins[0].id);
+        session.endSession(mockAdmins[1].id);
     });
 
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-
     it('Should get unauthorized error if requests without Auth header', async () => {
-        const deleteUser = {...mockUsers.at(-1)};
+        const deleteUser = {...mockAdmins.at(-1)};
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `mutation {
-                    deleteUser(
+                    deleteAdmin(
                         id: "${deleteUser.id}"
                     ) {
                         id
@@ -68,16 +63,16 @@ describe('deleteUser mutation', () => {
             });
 
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.unauthorized().message);
-        expect(response.body.data.deleteUser).toBeNull();
+        expect(response.body.data.deleteAdmin).toBeNull();
     });
 
     it('Should delete user and credentials by user that has access and return it', async () => {
-        const deleteUser = {...mockUsers.at(-1)};
+        const deleteUser = {...mockAdmins.at(-1)};
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
-                    deleteUser(
+                    deleteAdmin(
                         id: "${deleteUser.id}"
                     ) {
                         id
@@ -93,21 +88,24 @@ describe('deleteUser mutation', () => {
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canEdit {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                             canDelete {
                                 analytics
                                 products
                                 orders
                                 pages
-                                users
+                                admins
+                                customers
                             }
                         }
                         createdBy {
@@ -118,23 +116,24 @@ describe('deleteUser mutation', () => {
             });
 
         expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.deleteUser).toBeDefined();
+        expect(response.body.data.deleteAdmin).toBeDefined();
 
-        expectUserData(response.body.data.deleteUser, deleteUser);
-        expect(mockUsers).not.toContainEqual(deleteUser);
-        expect(mockWriteDataFn).toHaveBeenCalledWith(USERS_REPO_NAME, mockUsers);
-        expect(mockWriteDataFn).toHaveBeenCalledWith(USER_CREDS_REPO_NAME, expect.arrayContaining([
-            expect.not.objectContaining({ id: deleteUser.id })
-        ]));
+        expectUserData(response.body.data.deleteAdmin, deleteUser);
+        expect(mockAdmins).not.toContainEqual(
+            expect.objectContaining({
+                id: deleteUser.id
+            })
+        );
+        expect(mockWriteDataFn).toHaveBeenCalledWith(ADMINS_REPO_NAME, mockAdmins);
     });
     
     it('Should get Action forbidden error when action user has no access', async () => {
-        const notDeletedUser = {...mockUsers.at(-1)};
+        const notDeletedUser = {...mockAdmins.at(-1)};
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithoutAccessToken}`)
             .send({
                 query: `mutation {
-                    deleteUser(
+                    deleteAdmin(
                         id: "${notDeletedUser.id}"
                     ) {
                         id
@@ -142,11 +141,11 @@ describe('deleteUser mutation', () => {
                 }`
             });
 
-        expect(response.body.data.deleteUser).toBeNull();
+        expect(response.body.data.deleteAdmin).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.actionForbidden().message);
         
-        expect(mockUsers).toContainEqual(notDeletedUser);
+        expect(mockAdmins).toContainEqual(notDeletedUser);
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });
 
@@ -155,7 +154,7 @@ describe('deleteUser mutation', () => {
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
-                    deleteUser(
+                    deleteAdmin(
                         id: "not-existed-user-id"
                     ) {
                         id
@@ -163,7 +162,7 @@ describe('deleteUser mutation', () => {
                 }`
             });
 
-        expect(response.body.data.deleteUser).toBeNull();
+        expect(response.body.data.deleteAdmin).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.userNotFound().message);
         
@@ -175,8 +174,8 @@ describe('deleteUser mutation', () => {
             .set('Authorization', `Bearer some-not-existed-token`)
             .send({
                 query: `mutation {
-                    deleteUser(
-                        id: "${mockUsers[2].id}"
+                    deleteAdmin(
+                        id: "${mockAdmins[2].id}"
                     ) {
                         id
                     }

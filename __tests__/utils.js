@@ -1,6 +1,5 @@
-const mockUsers = require('./__mocks__/users.json');
+const mockAdmins = require('./__mocks__/admins.json');
 const mockPages = require('./__mocks__/pages.json');
-const mockCredentials = require('./__mocks__/user-credentials.json');
 
 const SessionManager = require('../managers/SessionManager');
 const {TokenManager} = require('../managers/TokenManager');
@@ -28,11 +27,9 @@ const mockSessionForUser = (userId, accessToken = 'test-token') => {
 
 const mockReadData = (name) => {
     if (name === USERS_REPO_NAME) {
-        return Promise.resolve(mockUsers);
+        return Promise.resolve(mockAdmins);
     } else if (name === 'pages') {
         return Promise.resolve(mockPages);
-    } else if (name === 'user-credentials') {
-        return Promise.resolve(mockCredentials);
     }
 };
 

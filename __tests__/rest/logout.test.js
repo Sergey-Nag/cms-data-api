@@ -1,22 +1,19 @@
 const server = require('../../index.js');
 const supertest = require('supertest');
 const data = require('../../data/index.js');
-const mockUsers = require('../__mocks__/users.json');
-const mockCredentials = require('../__mocks__/user-credentials.json');
+const mockAdmins = require('../__mocks__/admins.json');
 const { REST_ENDPOINT } = require('../constants.js');
 const ApiErrorFactory = require('../../utils/ApiErrorFactory.js');
 const SessionManager = require('../../managers/SessionManager.js');
 const ApiSuccessFactory = require('../../utils/ApiSuccessFactory.js');
-const { USERS_REPO_NAME } = require('../../constants/repositoryNames.js');
-const mockUsersRepoName = USERS_REPO_NAME;
+const { ADMINS_REPO_NAME } = require('../../constants/repositoryNames.js');
+const mockAdminsRepoName = ADMINS_REPO_NAME;
 
 jest.mock('../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((dataName) => {
-        if (dataName === mockUsersRepoName) {
-            return mockUsers;
+        if (dataName === mockAdminsRepoName) {
+            return mockAdmins;
         }
-
-        return mockCredentials;
     }),
     writeData: jest.fn((data) => data),
 }));
@@ -29,11 +26,11 @@ describe('REST /logout', () => {
     let session;
     beforeEach(() => {
         const sessions = new SessionManager();
-        session = sessions.createSession(mockUsers[0].id);
+        session = sessions.createSession(mockAdmins[0].id);
     });
     afterEach(() => {
         const sessions = new SessionManager();
-        sessions.endSession(mockUsers[0].id);
+        sessions.endSession(mockAdmins[0].id);
     
         jest.clearAllMocks();
     });
@@ -65,7 +62,7 @@ describe('REST /logout', () => {
     });
 
     it('Should successfully logout authenticated user', async () => {
-        const userId = mockUsers[0].id;
+        const userId = mockAdmins[0].id;
         const accessToken = session.accessToken;
 
         const response = await supertest(server).post(apiEndpoint)

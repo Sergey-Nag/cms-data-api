@@ -1,4 +1,5 @@
 const { DEFAULT_PERMISSIONS } = require("../../../constants/defaults");
+const SessionManager = require("../../../managers/SessionManager");
 const UserCredentials = require("./Credentials");
 const User = require("./User");
 
@@ -25,15 +26,24 @@ class Admin extends User {
     }
 
     isOnline() {
-        return true
+        const session = new SessionManager();
+        return !!session.getSession(this.id);
     }
 
     async setPassword(password) {
-        await this._secret.hashPassword(password);
+        try {
+            await this._secret.hashPassword(password);
+            return true;
+        } catch(e) {
+            return false;
+        }
+    }
+
+    async isPasswordValidAsync(password) {
+        return await this._secret.isPasswordValidAsync(password);
     }
 
     update({ permissions, ...data }, modifiedById = null) {
-        console.log(permissions, data);
         this.permissions = {
             canSee: {
                 ...this.permissions?.canSee,

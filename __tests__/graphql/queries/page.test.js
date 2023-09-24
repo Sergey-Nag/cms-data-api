@@ -1,4 +1,4 @@
-const mockUsers = require('../../__mocks__/users.json');
+const mockAdmins = require('../../__mocks__/admins.json');
 const mockPages = require('../../__mocks__/pages.json');
 const {readData} = require('../../../data/index.js');
 const server = require('../../../index');
@@ -6,16 +6,15 @@ const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const { mockSessionForUser } = require('../../utils');
-const { USERS_REPO_NAME, PAGES_REPO_NAME } = require('../../../constants/repositoryNames');
-const mockUsersRepoName = USERS_REPO_NAME;
+const { PAGES_REPO_NAME, ADMINS_REPO_NAME } = require('../../../constants/repositoryNames');
+const SessionManager = require('../../../managers/SessionManager');
+const mockAdminsRepoName = ADMINS_REPO_NAME;
 const mockPagesRepoName = PAGES_REPO_NAME;
-
-const ACCESS_TOKEN = 'page-access-token';
 
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === mockUsersRepoName) {
-            return Promise.resolve(mockUsers);
+        if (name === mockAdminsRepoName) {
+            return Promise.resolve(mockAdmins);
         } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
         }
@@ -24,7 +23,22 @@ jest.mock('../../../data/index.js', () => ({
 }));
 
 describe('page query', () => {
+    let userWithAccessToken, userWithoutAccessToken;
+    const session = new SessionManager();
+
     beforeAll(() => {
+        const first = session.createSession(mockAdmins[0].id);
+        const second = session.createSession(mockAdmins[1].id);
+        userWithAccessToken = first.accessToken;
+        userWithoutAccessToken = second.accessToken;
+    });
+
+    afterAll(() => {
+        session.endSession(mockAdmins[0].id);
+        session.endSession(mockAdmins[1].id);
+    });
+
+    beforeEach(() => {
         jest.clearAllMocks();
     });
 
@@ -32,7 +46,7 @@ describe('page query', () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `{
-                    page(id: "${mockPages[0].id}") {
+                    page(find: { id: "${mockPages[0].id}" }) {
                         id
                         createdISO
                         path
@@ -60,7 +74,10 @@ describe('page query', () => {
         const expectedData = {
             ...rest,
             id,
-            createdBy: null,
+            createdBy: {
+                id: mockAdmins[0].id,
+                firstname: mockAdmins[0].firstname,
+            },
             modifiedBy: null,
             content: null,
         }
@@ -68,13 +85,12 @@ describe('page query', () => {
     });
 
     it('Should get specific page by id when action user has access and can see created and modified by users', async () => {
-        const {accessToken, endSession} = mockSessionForUser(mockUsers[0].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${accessToken}`)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `
                 {
-                    page(id: "${mockPages[1].id}") {
+                    page(find: { id: "${mockPages[1].id}" }) {
                         id
                         createdBy {
                             id
@@ -91,8 +107,8 @@ describe('page query', () => {
 
         expect(response.body.errors).toBeUndefined();
         
-        const createdBy = mockUsers.find(({id}) => id === mockPages[1].createdById );
-        const modifiedBy = mockUsers.find(({id}) => id === mockPages[1].modifiedById );
+        const createdBy = mockAdmins.find(({id}) => id === mockPages[1].createdById );
+        const modifiedBy = mockAdmins.find(({id}) => id === mockPages[1].modifiedById );
         expect(response.body.data.page).toEqual({
             id: mockPages[1].id,
             createdBy: {
@@ -104,17 +120,15 @@ describe('page query', () => {
                 firstname: modifiedBy.firstname
             }
         });
-        endSession();
     });
 
     it('Should get Action forbidden error when action user has no access', async () => {
-        const {accessToken, endSession} = mockSessionForUser(mockUsers[1].id, ACCESS_TOKEN);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .set('Authorization', `Bearer ${accessToken}`)
+            .set('Authorization', `Bearer ${userWithoutAccessToken}`)
             .send({
                 query: `
                 {
-                    page(id: "${mockPages[1].id}") {
+                    page(find: { id: "${mockPages[1].id}" }) {
                         id
                     }
                 }
@@ -124,15 +138,14 @@ describe('page query', () => {
         expect(response.body.data.page).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.actionForbidden().message);
-        endSession();
     });
 
-    it('Should get a null when pages is not found and corresponding error message', async () => {
+    it('Should get a null when page is not found and corresponding error message', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `
                 {
-                    page(id: "test-id-that-shouldnt-exist") {
+                    page(find: { id: "test-id-that-shouldnt-exist" }) {
                         id
                     }
                 }
@@ -141,21 +154,21 @@ describe('page query', () => {
 
         expect(response.body.data.page).toBeNull();
         expect(response.body.errors).toBeDefined();
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageNotFound('test-id-that-shouldnt-exist').message)
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageNotFound().message)
     });
 
     it.each([
         ['a page by id', `id: "${mockPages[1].id}"`, mockPages[1]],
-        ['a page by alias', `alias: "another"`, mockPages[2]],
+        ['a page by alias', `alias: "${mockPages[2].alias}"`, mockPages[2]],
         [
             'a page by createdById and title', 
-            `createdById: "test-1" title: "4"`, 
+            `createdById: "${mockPages[3].createdById}" title: "${mockPages[3].title}"`, 
             mockPages[3]
         ],
         [
             'a page by modifiedById', 
-            `createdById: "test-2"`, 
-            mockPages[1]
+            `modifiedById: "${mockAdmins[2].id}"`, 
+            mockPages[2]
         ],
         [
             'a page by partial path',
@@ -173,7 +186,7 @@ describe('page query', () => {
                 query: `
                 {
                     page(
-                        ${query}
+                        find: { ${query} }
                     ) {
                         id
                         title

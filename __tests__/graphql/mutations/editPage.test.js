@@ -1,4 +1,4 @@
-const mockUsers = require('../../__mocks__/users.json');
+const mockAdmins = require('../../__mocks__/admins.json');
 const mockPages = require('../../__mocks__/pages.json');
 const data = require('../../../data/index.js');
 const server = require('../../../index');
@@ -8,8 +8,8 @@ const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const SessionManager = require('../../../managers/SessionManager');
 const { expectPageData } = require('../utils');
-const { USERS_REPO_NAME, PAGES_REPO_NAME } = require('../../../constants/repositoryNames');
-const mockUsersRepoName = USERS_REPO_NAME;
+const { PAGES_REPO_NAME, ADMINS_REPO_NAME } = require('../../../constants/repositoryNames');
+const mockAdminsRepoName = ADMINS_REPO_NAME;
 const mockPagesRepoName = PAGES_REPO_NAME;
 
 const ACCESS_TOKEN = 'edit-page-access-token';
@@ -17,8 +17,8 @@ const ACCESS_TOKEN = 'edit-page-access-token';
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === mockUsersRepoName) {
-            return Promise.resolve(mockUsers);
+        if (name === mockAdminsRepoName) {
+            return Promise.resolve(mockAdmins);
         } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
         }
@@ -29,7 +29,7 @@ jest.mock('../../../data/index.js', () => ({
 const MOCK_ISO_TIME = '2023-09-02T19:30:36.258Z'
 Date.prototype.toISOString = jest.fn(() => MOCK_ISO_TIME);
 
-describe('aditPage mutation', () => {
+describe('Edit entity mutation (aditPage)', () => {
     const mockWriteDataFn = jest.fn();
     const MOCK_UNIQID = 'Pageuniqid';
     uniqid.mockReturnValue(MOCK_UNIQID);
@@ -39,15 +39,15 @@ describe('aditPage mutation', () => {
     const session = new SessionManager();
 
     beforeAll(() => {
-        const first = session.createSession(mockUsers[0].id);
-        const second = session.createSession(mockUsers[1].id);
+        const first = session.createSession(mockAdmins[0].id);
+        const second = session.createSession(mockAdmins[1].id);
         userWithAccessToken = first.accessToken;
         userWithoutAccessToken = second.accessToken;
     });
 
     afterAll(() => {
-        session.endSession(mockUsers[0].id);
-        session.endSession(mockUsers[1].id);
+        session.endSession(mockAdmins[0].id);
+        session.endSession(mockAdmins[1].id);
     });
 
     beforeEach(() => {
@@ -60,7 +60,7 @@ describe('aditPage mutation', () => {
                 query: `mutation {
                     editPage(
                         id: "ololo"
-                        data: {}
+                        input: {}
                     ) {
                         id
                     }
@@ -76,7 +76,7 @@ describe('aditPage mutation', () => {
             id: mockPages[0].id,
             title: 'new title',
             alias: 'page-alias',
-            modifiedById: mockUsers[0].id,
+            modifiedById: mockAdmins[0].id,
         }
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
@@ -84,7 +84,7 @@ describe('aditPage mutation', () => {
                 query: `mutation {
                     editPage(
                         id: "${enteredData.id}"
-                        data: {
+                        input: {
                             title: "${enteredData.title}"
                             path: ["new", "path"]
                             alias: "${enteredData.alias}"
@@ -163,7 +163,7 @@ describe('aditPage mutation', () => {
                 query: `mutation EDIT($updateData: EditPageInput!) {
                     editPage(
                         id: "${mockPages[0].id}"
-                        data: $updateData
+                        input: $updateData
                     ) {
                         id
                         path
@@ -198,7 +198,7 @@ describe('aditPage mutation', () => {
                 id: 'not-existed-page-id',
                 withAccess: true
             },
-            ApiErrorFactory.pageNotFound('not-existed-page-id'),
+            ApiErrorFactory.pageNotFound(),
         ],
         [
             'Should get Page not found error when id is empty',
@@ -223,10 +223,10 @@ describe('aditPage mutation', () => {
                 variables: {
                     id
                 },
-                query: `mutation EDIT($id: String!) {
+                query: `mutation EDIT($id: ID!) {
                     editPage(
                         id: $id
-                        data: {
+                        input: {
                             title: "new title"
                         }
                     ) {
@@ -301,7 +301,7 @@ describe('aditPage mutation', () => {
                 query: `mutation EDIT($updateData: EditPageInput!) {
                     editPage(
                         id: "${mockPages[0].id}"
-                        data: $updateData
+                        input: $updateData
                     ) {
                         id
                     }

@@ -1,4 +1,4 @@
-const mockUsers = require('../../__mocks__/users.json');
+const mockAdmins = require('../../__mocks__/admins.json');
 const mockPages = require('../../__mocks__/pages.json');
 const data = require('../../../data/index.js');
 const server = require('../../../index');
@@ -8,15 +8,15 @@ const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const { expectPageData } = require('../utils');
 const SessionManager = require('../../../managers/SessionManager');
-const { USERS_REPO_NAME, PAGES_REPO_NAME } = require('../../../constants/repositoryNames');
-const mockUsersRepoName = USERS_REPO_NAME;
+const { PAGES_REPO_NAME, ADMINS_REPO_NAME } = require('../../../constants/repositoryNames');
+const mockAdminsRepoName = ADMINS_REPO_NAME;
 const mockPagesRepoName = PAGES_REPO_NAME;
 
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
-        if (name === mockUsersRepoName) {
-            return Promise.resolve(mockUsers);
+        if (name === mockAdminsRepoName) {
+            return Promise.resolve(mockAdmins);
         } else if (name === mockPagesRepoName) {
             return Promise.resolve(mockPages);
         }
@@ -24,7 +24,7 @@ jest.mock('../../../data/index.js', () => ({
     writeData: jest.fn(),
 }));
 
-describe('deleteUser mutation', () => {
+describe('Delete entity mutation (deletePage)', () => {
     const mockWriteDataFn = jest.fn();
     const MOCK_UNIQID = 'Pageuniqid';
     uniqid.mockReturnValue(MOCK_UNIQID);
@@ -34,15 +34,15 @@ describe('deleteUser mutation', () => {
     const session = new SessionManager();
 
     beforeAll(() => {
-        const first = session.createSession(mockUsers[0].id);
-        const second = session.createSession(mockUsers[1].id);
+        const first = session.createSession(mockAdmins[0].id);
+        const second = session.createSession(mockAdmins[1].id);
         userWithAccessToken = first.accessToken;
         userWithoutAccessToken = second.accessToken;
     });
 
     afterAll(() => {
-        session.endSession(mockUsers[0].id);
-        session.endSession(mockUsers[1].id);
+        session.endSession(mockAdmins[0].id);
+        session.endSession(mockAdmins[1].id);
     });
 
     beforeEach(() => {
@@ -120,7 +120,7 @@ describe('deleteUser mutation', () => {
 
         expect(response.body.data.deletePage).toBeNull();
         expect(response.body.errors).toBeDefined();
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageNotFound('not-existed-page-id').message);
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageNotFound().message);
         
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });

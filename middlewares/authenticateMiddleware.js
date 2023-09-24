@@ -1,4 +1,6 @@
-const { UserRepository } = require("../data/repositories");
+const { ADMINS_REPO_NAME } = require("../constants/repositoryNames");
+const Admin = require("../data/models/users/Admin");
+const Repository = require("../data/repositories/Repository");
 const SessionManager = require("../managers/SessionManager");
 const { TokenManager } = require("../managers/TokenManager");
 const ApiErrorFactory = require("../utils/ApiErrorFactory");
@@ -50,8 +52,7 @@ function accessTokenOnlyMiddleware(req, res, next) {
             }
         } catch (error) {
             // Token verification failed
-            // console.log(error);
-            req.userId = null;
+            return res.status(401).json({ error: error.message });
         }
     }
 
@@ -76,12 +77,11 @@ async function authenticateNotExpiredTokenMiddleware(req, res, next) {
                 throw ApiErrorFactory.unauthorized();
             }
 
-            const usersRepo = new UserRepository();
-            await usersRepo.load();
+            const repo = new Repository(ADMINS_REPO_NAME)
+            await repo.load();
             
-            const user = usersRepo.get({ id: decodedUserData?.userId });
-
-            req.user = user;
+            const user = repo.data.find(({ id }) => id === decodedUserData.userId);
+            req.user = new Admin(user);
         } catch (error) {
             // Token verification failed
             // console.log(error);
@@ -98,6 +98,10 @@ function authenticateRequiredMiddleware(req, res, next) {
         return res.status(401).json({ error: ApiErrorFactory.authorizationTokenWasntProvided().message });
     }
     next();
+}
+
+function decodeUserMiddleware(req, res, next) {
+
 }
 
 module.exports = {
