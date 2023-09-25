@@ -1,24 +1,18 @@
-const UserEditableModel = require('../baseModels/UserEditableModel');
-const CreatableModel = require('../baseModels/UserEditableModel');
+const UniqIdModel = require('../baseModels/UniqIdModel');
 
-class User extends UserEditableModel {
-    constructor({ firstname, lastname, email, createdById, ...data }, createdByIdInitital = null, idPrefix = null) {
-        super({
-            ...data,
-            createdById: createdByIdInitital ?? createdById,
-        }, idPrefix);
+class User extends UniqIdModel {
+    constructor({ id, firstname, lastname, email }, idPrefix = 'U') {
+        super(id, idPrefix);
 
-        this.firstname = firstname;
+        this.firstname = firstname ?? null;
         this.lastname = lastname ?? null;
         this.email = email;
     }
 
-    update({ firstname, lastname, email }, modifiedById = null) {
+    update({ firstname, lastname, email }) {
         this.firstname = firstname ?? this.firstname;
         this.lastname = lastname ?? this.lastname;
         this.email = email ?? this.email;
-
-        super.update(modifiedById);
     }
 }
 

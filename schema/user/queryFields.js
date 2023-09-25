@@ -1,15 +1,13 @@
 const { GraphQLList } = require('graphql');
-const { AdminType } = require('./type');
+const { AdminType, CustomerType } = require('./type');
 const { authProtect, canSeeProtect } = require('../utils');
-const { AdminsFilterInput, PaginatedAdminsType } = require('./queryArgs');
+const { AdminsFilterInput, PaginatedAdminsType, PaginatedCustomersType, CustomerFilterInput } = require('./queryArgs');
 const { SortInput } = require('../utils/sort');
 const AdminsResolver = require('./AdminsResolver');
 const { PaginationInput } = require('../utils/pagination');
+const CustomersResolver = require('./CustomersResolver');
 
-const queryFields = {
-    filter: {
-        type: AdminsFilterInput
-    },
+const querySortPaginationFields = {
     sort: {
         type: GraphQLList(SortInput)
     },
@@ -18,13 +16,28 @@ const queryFields = {
     }
 }
 
+const queryAdminFields = {
+    filter: {
+        type: AdminsFilterInput
+    },
+    ...querySortPaginationFields,
+}
+
+const queryCustomerFields = {
+    filter: {
+        type: CustomerFilterInput
+    },
+    ...querySortPaginationFields,
+}
+
 const adminsResolver = new AdminsResolver();
+const customersResolver = new CustomersResolver();
 
 /** @type {import('graphql/type/definition').GraphQLFieldConfigMap} */
 module.exports = {
     admins: {
         type: PaginatedAdminsType,
-        args: queryFields,
+        args: queryAdminFields,
         resolve: authProtect(
             canSeeProtect('admins', 
                 adminsResolver.getAll.bind(adminsResolver)
@@ -35,13 +48,24 @@ module.exports = {
     admin: {
         type: AdminType,
         args: {
-            find: queryFields.filter
+            find: queryAdminFields.filter
         },
         resolve: authProtect(
             canSeeProtect('admins', 
                 adminsResolver.get.bind(adminsResolver)
             )
         )
-        // resolve: authProtect(UserResolver.get),
     },
+    customers: {
+        type: PaginatedCustomersType,
+        args: queryCustomerFields,
+        resolve: canSeeProtect('customers', customersResolver.getAll.bind(customersResolver))
+    },
+    customer: {
+        type: CustomerType,
+        args: {
+            find: queryCustomerFields.filter,
+        },
+        resolve: canSeeProtect('customers', customersResolver.get.bind(customersResolver))
+    }
 };

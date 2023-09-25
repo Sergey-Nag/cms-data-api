@@ -1,11 +1,14 @@
 const { GraphQLObjectType, GraphQLString, GraphQLList } = require('graphql');
 const {AdminType} = require('../user/type');
 const AdminsResolver = require('../user/AdminsResolver');
+const { canSeeProtect } = require('../utils');
+const EditableModelInterface = require('../interfaces/EditableModelInterface');
 
 const adminsResolver = new AdminsResolver();
 
 const PageType = new GraphQLObjectType({
     name: 'Page',
+    interfaces: [EditableModelInterface],
     fields: () => ({
         id: { type: GraphQLString },
         path: { type: new GraphQLList(GraphQLString) },
@@ -14,7 +17,7 @@ const PageType = new GraphQLObjectType({
         createdISO: { type: GraphQLString },
         createdBy: {
             type: AdminType,
-            resolve: async ({ createdById }, args, context) => {
+            resolve: canSeeProtect('admins', async ({ createdById }, args, context) => {
                 return createdById && await adminsResolver.get(
                     null, 
                     { 
@@ -24,11 +27,11 @@ const PageType = new GraphQLObjectType({
                     },
                     context
                 );
-            }
+            })
         },
         modifiedBy: {
             type: AdminType,
-            resolve: async ({ modifiedById }, args, context) => {
+            resolve: canSeeProtect('admins', async ({ modifiedById }, args, context) => {
                 return modifiedById && await adminsResolver.get(
                     null, 
                     { 
@@ -38,7 +41,7 @@ const PageType = new GraphQLObjectType({
                     },
                     context
                 );
-            }
+            })
         },
         lastModifiedISO: { type: GraphQLString },
         content: { type: new GraphQLList(GraphQLString) }

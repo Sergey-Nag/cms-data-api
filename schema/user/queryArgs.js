@@ -1,6 +1,6 @@
 const { GraphQLInputObjectType, GraphQLString, GraphQLID, GraphQLBoolean, GraphQLList, GraphQLInt, GraphQLObjectType } = require("graphql");
 const { DEFAULT_PERMISSIONS } = require("../../constants/defaults");
-const { AdminType } = require("./type");
+const { AdminType, CustomerType } = require("./type");
 
 const AdminPagesRightsInput = new GraphQLInputObjectType({
     name: 'AdminPagesRightsInput',
@@ -36,6 +36,16 @@ const AdminsFilterInput = new GraphQLInputObjectType({
     }
 });
 
+const CustomerFilterInput = new GraphQLInputObjectType({
+    name: 'CustomerFilter',
+    fields: {
+        id: { type: GraphQLID },
+        firstname: { type: GraphQLString },
+        lastname: { type: GraphQLString },
+        email: { type: GraphQLString },
+    }
+});
+
 
 const PaginatedAdminsType = new GraphQLObjectType({
     name: 'PaginatedAdmins',
@@ -48,9 +58,22 @@ const PaginatedAdminsType = new GraphQLObjectType({
     })
 })
 
+const PaginatedCustomersType = new GraphQLObjectType({
+    name: 'PaginatedCustomers',
+    fields: () => ({
+        items: {
+            type: GraphQLList(CustomerType),
+        },
+        end: { type: GraphQLInt },
+        itemsLeft: { type: GraphQLInt },
+    })
+})
+
 module.exports = {
     AdminPagesRightsInput,
     UserPermissionsInput,
     AdminsFilterInput,
-    PaginatedAdminsType
+    PaginatedAdminsType,
+    PaginatedCustomersType,
+    CustomerFilterInput
 }

@@ -77,4 +77,13 @@ module.exports = class ApiErrorFactory {
             : 'Page already exists!'
         );
     }
+    static customerNotFound() {
+        return new Error('Customer not found');
+    }
+    static productListIsEmpty() {
+        return new Error('Product list is empty!')
+    }
+    static orderNotFound() {
+        return new Error('Order not found');
+    }
 }

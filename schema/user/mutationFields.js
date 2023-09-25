@@ -1,11 +1,13 @@
 const { GraphQLString, GraphQLNonNull, GraphQLID } = require('graphql');
-const { AdminType } = require('./type');
+const { AdminType, CustomerType } = require('./type');
 const { authProtect, canEditProtect, canDeleteProtect } = require('../utils');
-const { addUserProtect, editUserProtect, addAdminProtect, editAdminProtect } = require('./mutationProtections');
+const { addAdminProtect, editAdminProtect, addCustomerProtect, editCustomerProtect } = require('./mutationProtections');
 const AdminsResolver = require('./AdminsResolver');
-const { NewAdminInput, EditAdminInput } = require('./mutationArgs');
+const { NewAdminInput, EditAdminInput, NewCustomerInput, EditCustomerInput } = require('./mutationArgs');
+const CustomersResolver = require('./CustomersResolver');
 
 const adminsResolver = new AdminsResolver();
+const customersResolver = new CustomersResolver();
 
 /** @type {import('graphql/type/definition').GraphQLFieldConfigMap} */
 module.exports = {
@@ -24,7 +26,7 @@ module.exports = {
                 )
             )
         ) 
-        // resolve: authProtect(addUserProtect(UserResolver.add)),
+        // resolve: authProtect(addAdminProtect(UserResolver.add)),
     },
     editAdmin: {
         type: AdminType,
@@ -42,7 +44,7 @@ module.exports = {
                 )
             )
         )
-        // resolve: authProtect(editUserProtect(UserResolver.edit)),
+        // resolve: authProtect(editAdminProtect(UserResolver.edit)),
     },
     deleteAdmin: {
         type: AdminType,
@@ -56,5 +58,42 @@ module.exports = {
             )
         )
         // resolve: authProtect(UserResolver.delete),
+    },
+    addCustomer: {
+        type: CustomerType,
+        args: {
+            input: {
+                type: GraphQLNonNull(NewCustomerInput)
+            },
+        },
+        resolve: canEditProtect('customers', 
+            addCustomerProtect(
+                customersResolver.add.bind(customersResolver)
+            )
+        )
+        // resolve: authProtect(addAdminProtect(UserResolver.add)),
+    },
+    editCustomer: {
+        type: CustomerType,
+        args: {
+            id: { type: GraphQLNonNull(GraphQLID) },
+            input: {
+                type: GraphQLNonNull(EditCustomerInput),
+            },
+        },
+        resolve: canEditProtect('customers', 
+            editCustomerProtect(
+                customersResolver.edit.bind(customersResolver),
+            )
+        )
+    },
+    deleteCustomer: {
+        type: CustomerType,
+        args: {
+            id: { type: GraphQLNonNull(GraphQLID) },
+        },
+        resolve: canDeleteProtect('customers', 
+            customersResolver.delete.bind(customersResolver),
+        )
     }
 }

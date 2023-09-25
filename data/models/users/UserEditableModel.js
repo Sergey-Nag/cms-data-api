@@ -1,17 +1,19 @@
-const UniqIdModel = require('./UniqIdModel');
+const User = require('./User');
 
-class UserEditableModel extends UniqIdModel {
-    constructor({ id, createdById, modifiedById, createdISO, lastModifiedISO }, idPrefix) {
-        super(id, idPrefix);
+class UserEditableModel extends User {
+    constructor({ createdById, modifiedById, createdISO, lastModifiedISO, ...data }, idPrefix) {
+        super(data, idPrefix);
         this.createdById = createdById ?? null;
         this.createdISO = createdISO ?? new Date().toISOString();
         this.modifiedById = modifiedById ?? null;
         this.lastModifiedISO = lastModifiedISO ?? null;
     }
 
-    update(modifiedById) {
+    update({modifiedById, ...data}) {
         this.modifiedById = modifiedById;
         this.lastModifiedISO = new Date().toISOString();
+
+        super.update(data);
     } 
 }
 

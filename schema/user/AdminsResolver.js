@@ -21,7 +21,7 @@ class AdminsResolver extends DataResolver {
         const admin = await super.add(parent, args, context);
 
         const password = UserRegistrationService.generatePassword();
-        
+
         await admin.setPassword(password);
         await this.repository.save();
         return admin;

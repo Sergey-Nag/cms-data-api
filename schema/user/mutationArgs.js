@@ -1,15 +1,23 @@
-const { GraphQLInputObjectType, GraphQLNonNull, GraphQLString } = require("graphql");
+const { GraphQLInputObjectType, GraphQLNonNull, GraphQLString, GraphQLList, graphqlSync } = require("graphql");
 const { UserPermissionsInput } = require("./queryArgs");
 
 const userEditableFields = {
     firstname: { type: GraphQLString },
     lastname: { type: GraphQLString },
     email: { type: GraphQLString },
+}
+
+const adminEditableFields = {
+    ...userEditableFields,
     permissions: { type: UserPermissionsInput },
 }
 
 const EditAdminInput = new GraphQLInputObjectType({
     name: 'EditAdminInput',
+    fields: adminEditableFields,
+});
+const EditCustomerInput = new GraphQLInputObjectType({
+    name: 'EditCustomerInput',
     fields: userEditableFields,
 });
 
@@ -23,7 +31,18 @@ const NewAdminInput = new GraphQLInputObjectType({
     },
 });
 
+const NewCustomerInput = new GraphQLInputObjectType({
+    name: 'NewCustomerInput',
+    fields: {
+        email: { type: new GraphQLNonNull(GraphQLString) },
+        firstname: { type: GraphQLString },
+        lastname: { type: GraphQLString },
+    },
+});
+
 module.exports = {
     EditAdminInput,
-    NewAdminInput
+    NewAdminInput,
+    NewCustomerInput,
+    EditCustomerInput
 }

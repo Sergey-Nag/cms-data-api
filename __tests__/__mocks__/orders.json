@@ -1,0 +1,121 @@
+[
+    {
+        "id": "order-#1",
+        "description": "New Order",
+        "shippingAddress": "27 Merry Lane NP0001",
+        "billingAddress": "27 Merry Lane NP0001",
+        "customerId": "Ctest-id-1",
+        "orderProducts": [
+            {
+                "productId": "123",
+                "fixedPrice": 11.5,
+                "amount": 2
+            },
+            {
+                "productId": "ascasdc",
+                "fixedPrice": 11.5,
+                "amount": 3
+            }
+        ],
+        "totalPrice": 57.5,
+        "statusHistory": [
+            {
+                "status": 0,
+                "description": "Placed new order",
+                "createdById": "Ctest-id-1",
+                "createdISO": "2023-09-24T09:00:00.414Z"
+            }
+        ],
+        "currentStatus": 0,
+        "createdISO": "2023-09-24T09:00:00.414Z",
+        "lastModifiedISO": "2023-09-24T18:53:12.414Z"
+    },
+    {
+        "id": "order-#2",
+        "description": "Another one order by second customer",
+        "shippingAddress": "some address",
+        "billingAddress": "some billing address",
+        "customerId": "Ctest-id-2",
+        "orderProducts": [
+            {
+                "productId": "123",
+                "fixedPrice": 11.5,
+                "amount": 11
+            }
+        ],
+        "totalPrice": 126.5,
+        "statusHistory": [
+            {
+                "status": 0,
+                "description": "Placed new order",
+                "createdById": "Ctest-id-2",
+                "createdISO": "2023-09-24T10:00:00.414Z"
+            },
+            {
+                "status": 1,
+                "description": "Order verified and packing",
+                "createdById": "Atest-id-1",
+                "createdISO": "2023-09-24T18:53:12.414Z"
+            },
+            {
+                "status": 2,
+                "description": "Order packed and preparing to shipping",
+                "createdById": "Atest-id-1",
+                "createdISO": "2023-09-24T18:53:12.414Z"
+            },
+            {
+                "status": 3,
+                "description": "Order is delivering",
+                "createdById": "Atest-id-1",
+                "createdISO": "2023-09-24T18:53:12.414Z"
+            },
+            {
+                "status": 4,
+                "description": "Order is delivered. Whaiting for a customer",
+                "createdById": "Atest-id-2",
+                "createdISO": "2023-09-24T18:53:12.414Z"
+            }
+        ],
+        "currentStatus": 4,
+        "createdISO": "2023-09-24T10:00:00.414Z",
+        "lastModifiedISO": "2023-09-24T18:53:12.414Z"
+    },
+    {
+        "id": "order-#3",
+        "description": null,
+        "shippingAddress": null,
+        "billingAddress": null,
+        "customerId": "Ctest-id-2",
+        "orderProducts": [
+            {
+                "productId": "123",
+                "fixedPrice": 11.5,
+                "amount": 1
+            }
+        ],
+        "totalPrice": 11.5,
+        "statusHistory": [
+            {
+                "status": 0,
+                "description": "Placed new order",
+                "createdById": "Ctest-id-2",
+                "createdISO": "2023-09-24T20:00:00.414Z"
+            },
+            {
+                "status": 1,
+                "description": "Verified on stock. Need to check customer address",
+                "createdById": "Atest-id-3",
+                "createdISO": "2023-09-24T18:53:12.414Z"
+            },
+            {
+                "status": 5,
+                "description": "Verified customer, the order is cancelled",
+                "createdById": "Atest-id-3",
+                "createdISO": "2023-09-24T18:53:12.414Z"
+            }
+        ],
+        "currentStatus": 5,
+        "createdISO": "2023-09-24T20:00:00.414Z",
+        "lastModifiedISO": "2023-09-24T18:53:12.414Z"
+    }
+]

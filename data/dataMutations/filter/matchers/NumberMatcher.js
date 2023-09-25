@@ -18,6 +18,8 @@ class NumberMatcher extends Matcher {
                 return actualValue <= this.parsedValue.value;
             case ">=":
                 return actualValue >= this.parsedValue.value;
+            case "==":
+                return actualValue === this.parsedValue.value;
             default:
                 return actualValue === this.expectedValue;
         }

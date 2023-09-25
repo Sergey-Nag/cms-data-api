@@ -1,9 +1,9 @@
 const { DEFAULT_PERMISSIONS } = require("../../../constants/defaults");
 const SessionManager = require("../../../managers/SessionManager");
+const UserEditableModel = require("./UserEditableModel");
 const UserCredentials = require("./Credentials");
-const User = require("./User");
 
-class Admin extends User {
+class Admin extends UserEditableModel {
     constructor({ permissions, _secret, ...data}, createdByIdInitital = null) {
         super(data, createdByIdInitital, 'A');
 
@@ -59,7 +59,7 @@ class Admin extends User {
             }
         };
 
-        super.update(data, modifiedById);
+        super.update({modifiedById, ...data});
     }
 }
 

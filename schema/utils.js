@@ -56,9 +56,22 @@ const canDeleteProtect = (permission, fn) => {
     }
 }
 
+const getPriceFromProducts = (products) => {
+    return 0;
+}
+
+const getCurrentStatus = (statusHistory) => {
+    if (statusHistory.length === 0) return null;
+
+    const lastStatus = statusHistory.at(-1);
+    return lastStatus.status;
+}
+
 module.exports = {
     authProtect,
     canSeeProtect,
     canEditProtect,
     canDeleteProtect,
+    getPriceFromProducts,
+    getCurrentStatus,
 };

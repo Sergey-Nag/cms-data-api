@@ -7,6 +7,9 @@ const DEFAULT_PERMISSIONS = {
     customers: false,
 }
 
+const NEW_ORDER_DESCRIPTION = 'Placed new order';
+
 module.exports = {
     DEFAULT_PERMISSIONS,
+    NEW_ORDER_DESCRIPTION,
 }
