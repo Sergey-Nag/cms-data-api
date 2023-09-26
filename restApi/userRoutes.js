@@ -219,7 +219,7 @@ if (process.env.NODE_ENV !== 'production') {
             const sessions = new SessionManager();
             const tokens = sessions.createSession(user.id);
 
-            res.status(200).json({ user, tokens });
+            res.status(200).json({ tokens });
         } catch (error) {
             res.status(401).json({ error: error.message });
         }
