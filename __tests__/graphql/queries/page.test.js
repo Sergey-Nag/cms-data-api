@@ -62,6 +62,19 @@ describe('page query', () => {
                             firstname
                         }
                         content
+                        isPublished
+                        meta {
+                            keywords
+                            description
+                            author
+                            canonical
+                            card {
+                                title
+                                description
+                                url
+                                imageUrl
+                            }
+                        }
                     }
                 }
                 `

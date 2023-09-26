@@ -126,6 +126,7 @@ describe('Add entity mutation (addPage)', () => {
                         path
                         alias
                         title
+                        isPublished
                         createdISO
                         lastModifiedISO
                         createdBy {
@@ -134,6 +135,18 @@ describe('Add entity mutation (addPage)', () => {
                         }
                         modifiedBy {
                             id
+                        }
+                        meta {
+                            keywords
+                            description
+                            author
+                            canonical
+                            card {
+                                title
+                                description
+                                url
+                                imageUrl
+                            }
                         }
                     }
                 }
@@ -152,7 +165,20 @@ describe('Add entity mutation (addPage)', () => {
             createdISO: MOCK_ISO_TIME,
             lastModifiedISO: null,
             createdById: mockAdmins[0].id,
-            contentId: null
+            contentId: null,
+            isPublished: false,
+            meta: {
+                keywords: null,
+                description: null,
+                author: null,
+                canonical: null,
+                card: {
+                    title: null,
+                    description: null,
+                    imageUrl: null,
+                    url: null
+                }
+            }
         }
 
         expect(addPage).toHaveProperty('id', expectedData.id);
@@ -167,12 +193,81 @@ describe('Add entity mutation (addPage)', () => {
         });
         expect(addPage).toHaveProperty('modifiedBy', null);
 
-        expect(mockPages).toContainEqual(expectedData);
+        expect(mockPages).toContainEqual(expect.objectContaining(expectedData));
         expect(mockWriteDataFn).toHaveBeenCalledWith('pages', mockPages);
     });
 
+    it('Should create a page with metadata and isPublished is true', async () => {
+        const keywords = 'test keywords';
+        const description = 'test description';
+        const author = 'test author';
+        const canonical = 'canonical url http://something.com';
+        const cardTitle = 'test social card title';
+        const cardDescr = 'test social card description';
+        const cardImage = 'test social card image url http://something.com/some-image.jpg';
+        const cardUrl = 'test social card url http://something.com';
+
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
+            .send({
+                query: `mutation {
+                    addPage(
+                        input: {
+                            title:"New Page with metadata"
+                            path: ["new", "page", "meta"]
+                            isPublished: true
+                            meta: {
+                                keywords: "${keywords}"
+                                description: "${description}"
+                                author: "${author}"
+                                canonical: "${canonical}"
+                                card: {
+                                    title: "${cardTitle}"
+                                    description: "${cardDescr}"
+                                    url: "${cardUrl}"
+                                    imageUrl: "${cardImage}"
+                                }
+                            }
+                        }
+                    ) {
+                        isPublished
+                        meta {
+                            keywords
+                            description
+                            author
+                            canonical
+                            card {
+                                title
+                                description
+                                url
+                                imageUrl
+                            }
+                        }
+                    }
+                }
+                `
+            });
+            expect(response.body.errors).toBeUndefined();
+            expect(response.body.data.addPage).toBeDefined();
+            expect(response.body.data.addPage).toEqual({
+                isPublished: true,
+                meta: {
+                    keywords,
+                    description,
+                    author,
+                    canonical,
+                    card: {
+                        title: cardTitle,
+                        description: cardDescr,
+                        imageUrl: cardImage,
+                        url: cardUrl
+                    }
+                }
+            })
+    });
+
     it('Should get page with same title already exist error', async () => {
-        expect(mockPages).toHaveLength(6);
+        expect(mockPages).toHaveLength(7);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
@@ -192,11 +287,11 @@ describe('Add entity mutation (addPage)', () => {
         expect(response.body.data.addPage).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageAlreadyExists('title').message);
-        expect(mockPages).toHaveLength(6);
+        expect(mockPages).toHaveLength(7);
     });
 
     it('Should get page with same alias already exist error', async () => {
-        expect(mockPages).toHaveLength(6);
+        expect(mockPages).toHaveLength(7);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
@@ -217,11 +312,11 @@ describe('Add entity mutation (addPage)', () => {
         expect(response.body.data.addPage).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageAlreadyExists('alias').message);
-        expect(mockPages).toHaveLength(6);
+        expect(mockPages).toHaveLength(7);
     });
 
     it('Should create alias automatically when it is not provided', async () => {
-        expect(mockPages).toHaveLength(6);
+        expect(mockPages).toHaveLength(7);
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
@@ -242,7 +337,7 @@ describe('Add entity mutation (addPage)', () => {
         expect(response.body.data.addPage).toBeDefined();
 
         expect(response.body.data.addPage).toHaveProperty('alias', 'new-page-2');
-        expect(mockPages).toHaveLength(7);
+        expect(mockPages).toHaveLength(8);
     });
 
 

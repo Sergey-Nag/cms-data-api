@@ -12,8 +12,6 @@ const { PAGES_REPO_NAME, ADMINS_REPO_NAME } = require('../../../constants/reposi
 const mockAdminsRepoName = ADMINS_REPO_NAME;
 const mockPagesRepoName = PAGES_REPO_NAME;
 
-const ACCESS_TOKEN = 'edit-page-access-token';
-
 jest.mock('uniqid');
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
@@ -147,6 +145,32 @@ describe('Edit entity mutation (aditPage)', () => {
         [
             ['path', 'alias'], [['new', 'path', 'ohoho'], "just-one-more-alias"]
         ],
+        [
+            ['meta'], [{
+                description: 'new description from test',
+                author: mockAdmins[0].firstname,
+                canonical: 'http://some-site.com/olo1',
+                card: {
+                    title: 'Test title from a test',
+                    url: 'http://hz.com/ololo/123'
+                }
+            }]
+        ],
+        [
+            ['isPublished', 'meta'], [
+                false,
+                {
+                    author: 'Jozzy',
+                    canonical: null,
+                    card: {
+                        description: 'new description from test',
+                        title: 'another title from a test',
+                        imageUrl: 'http://hz.com/ololo/123',
+                        url: null
+                    }
+                }
+            ]
+        ],
     ])('Should update only provided properties: %s', async (props, values) => {
         const updateData = props.reduce((acc, prop, i) => {
             acc[prop] = values[i];
@@ -171,6 +195,19 @@ describe('Edit entity mutation (aditPage)', () => {
                         title
                         createdISO
                         lastModifiedISO
+                        isPublished
+                        meta {
+                            description
+                            keywords
+                            author
+                            canonical
+                            card {
+                                description
+                                imageUrl
+                                url
+                                title
+                            }
+                        }
                     }
                 }`
             });

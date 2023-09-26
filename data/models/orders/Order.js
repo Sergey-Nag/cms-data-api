@@ -26,7 +26,7 @@ class Order {
             : [new OrderStatusDetails({ createdById: customerId })];
         this.currentStatus = currentStatus ?? this.statusHistory.at(-1).status;
         this.lastModifiedISO = lastModifiedISO ?? this.statusHistory.at(-1).createdISO;
-        this.createdISO = createdISO ?? this.statusHistory.at(0).createdISO
+        this.createdISO = createdISO ?? this.statusHistory.at(0).createdISO;
     }
 
     update({ orderProductsId, customerId, description, shippingAddress, billingAddress, editStatus }, modifiedById = null) {

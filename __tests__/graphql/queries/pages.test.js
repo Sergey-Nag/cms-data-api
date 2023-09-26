@@ -56,6 +56,19 @@ describe('pages query', () => {
                             title
                             lastModifiedISO
                             content
+                            isPublished
+                            meta {
+                                author
+                                canonical
+                                description
+                                keywords
+                                card {
+                                    description
+                                    imageUrl
+                                    title
+                                    url
+                                }
+                            }
                         }
                     }
                 }
@@ -187,6 +200,16 @@ describe('pages query', () => {
             '1 page by full path',
             `path: ["new", "path", "with", "new", "page"]`,
             [mockPages[4]]
+        ],
+        [
+            '2 pages that have same keyword in meta',
+            `meta: { keywords: "test" }`,
+            [mockPages[0], mockPages[3]]
+        ],
+        [
+            '1 page that has meta description and does not have description in card',
+            `meta: { description: "description" card: { description: null } }`,
+            [mockPages[2]]
         ],
     ])('Filter should get %s', async (_, query, expectedPages) => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)

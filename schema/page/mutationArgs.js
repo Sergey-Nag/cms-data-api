@@ -1,4 +1,26 @@
-const { GraphQLInputObjectType, GraphQLNonNull, GraphQLString, GraphQLList } = require("graphql");
+const { GraphQLInputObjectType, GraphQLNonNull, GraphQLString, GraphQLList, GraphQLBoolean } = require("graphql");
+
+
+const SocialMediasCardInput = new GraphQLInputObjectType({
+    name: 'SocialMediasCardInput',
+    fields: {
+        title: { type: GraphQLString },
+        description: { type: GraphQLString },
+        imageUrl: { type: GraphQLString },
+        url: { type: GraphQLString },
+    }
+})
+
+const PageMetaDataInput = new GraphQLInputObjectType({
+    name: 'PageMetaDataInput',
+    fields: {
+        keywords: { type: GraphQLString },
+        description: { type: GraphQLString },
+        author: { type: GraphQLString },
+        canonical: { type: GraphQLString },
+        card: { type: SocialMediasCardInput }
+    }
+})
 
 const NewPageInput = new GraphQLInputObjectType({
     name: 'NewPageInput',
@@ -10,6 +32,8 @@ const NewPageInput = new GraphQLInputObjectType({
         alias: { 
             type: GraphQLString 
         },
+        isPublished: { type: GraphQLBoolean },
+        meta: { type: PageMetaDataInput }
     },
 });
 const EditPageInput = new GraphQLInputObjectType({
@@ -22,10 +46,13 @@ const EditPageInput = new GraphQLInputObjectType({
         alias: {
             type: GraphQLString 
         },
+        isPublished: { type: GraphQLBoolean },
+        meta: { type: PageMetaDataInput }
     },
 });
 
 module.exports = {
     NewPageInput,
-    EditPageInput
+    EditPageInput,
+    PageMetaDataInput
 }

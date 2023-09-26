@@ -1,8 +1,29 @@
-const { GraphQLObjectType, GraphQLString, GraphQLList } = require('graphql');
+const { GraphQLObjectType, GraphQLString, GraphQLList, GraphQLBoolean } = require('graphql');
 const {AdminType} = require('../user/type');
 const AdminsResolver = require('../user/AdminsResolver');
 const { canSeeProtect } = require('../utils');
 const EditableModelInterface = require('../interfaces/EditableModelInterface');
+
+const SocialMediasCardType = new GraphQLObjectType({
+    name: 'SocialMediasCard',
+    fields: {
+        title: { type: GraphQLString },
+        description: { type: GraphQLString },
+        imageUrl: { type: GraphQLString },
+        url: { type: GraphQLString },
+    }
+})
+
+const PageMetaDataType = new GraphQLObjectType({
+    name: 'PageMetaData',
+    fields: {
+        keywords: { type: GraphQLString },
+        description: { type: GraphQLString },
+        author: { type: GraphQLString },
+        canonical: { type: GraphQLString },
+        card: { type: SocialMediasCardType }
+    }
+})
 
 const adminsResolver = new AdminsResolver();
 
@@ -14,6 +35,8 @@ const PageType = new GraphQLObjectType({
         path: { type: new GraphQLList(GraphQLString) },
         alias: { type: GraphQLString },
         title: { type: GraphQLString },
+        isPublished: { type: GraphQLBoolean },
+        meta: { type: PageMetaDataType },
         createdISO: { type: GraphQLString },
         createdBy: {
             type: AdminType,
@@ -44,7 +67,7 @@ const PageType = new GraphQLObjectType({
             })
         },
         lastModifiedISO: { type: GraphQLString },
-        content: { type: new GraphQLList(GraphQLString) }
+        content: { type: new GraphQLList(GraphQLString) },
     }),
 });
 

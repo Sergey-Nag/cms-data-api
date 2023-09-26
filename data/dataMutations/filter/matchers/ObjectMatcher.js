@@ -10,7 +10,7 @@ class MatcherFactory {
         } else if (typeof expectedValue === "string") {
             return new StringMatcher(propertyName, expectedValue, isPartialy);
         } else if (typeof expectedValue === "object" && !Array.isArray(expectedValue) && expectedValue !== null) {
-            return new ObjectMatcher(propertyName, expectedValue);
+            return new ObjectMatcher(propertyName, expectedValue, isPartialy);
         } else if (Array.isArray(expectedValue)) {
             return new ArrayMatcher(propertyName, expectedValue, isPartialy);
         }

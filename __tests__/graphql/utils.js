@@ -63,6 +63,8 @@ function expectPageData(responsePage, expectedPage, oldPage) {
     const createdById = expectedPage?.createdById ?? oldPage?.createdById;
     const modifiedById = expectedPage?.modifiedById ?? oldPage?.modifiedById;
     const lastModifiedISO = expectedPage?.lastModifiedISO ?? oldPage?.lastModifiedISO;
+    const isPublished = expectedPage?.isPublished ?? oldPage?.isPublished;
+    const meta = expectedPage?.meta ?? oldPage?.meta;
 
     
     !isUndefined(id) && responsePage.id && expect(responsePage).toHaveProperty('id', id);
@@ -77,6 +79,20 @@ function expectPageData(responsePage, expectedPage, oldPage) {
     !isUndefined(modifiedById) && responsePage.modifiedBy && expect(responsePage).toHaveProperty('modifiedBy', {
         id: modifiedById
     });
+    !isUndefined(isPublished) && responsePage.isPublished && expect(responsePage).toHaveProperty('isPublished', isPublished);
+    if (!isUndefined(meta) && responsePage.meta) {
+        expect(responsePage.meta).toHaveProperty('keywords', isUndefined(meta.keywords) ? oldPage.meta.keywords : meta.keywords);
+        expect(responsePage.meta).toHaveProperty('description', isUndefined(meta.description) ? oldPage.meta.description : meta.description);
+        expect(responsePage.meta).toHaveProperty('author', isUndefined(meta.author) ? oldPage.meta.author : meta.author);
+        expect(responsePage.meta).toHaveProperty('canonical', isUndefined(meta.canonical) ? oldPage.meta.canonical : meta.canonical);
+
+        if (meta.card && responsePage.meta.card) {
+            expect(responsePage.meta.card).toHaveProperty('title', isUndefined(meta.card.title) ? oldPage.meta.card.title : meta.card.title);
+            expect(responsePage.meta.card).toHaveProperty('description', isUndefined(meta.card.description) ? oldPage.meta.card.description : meta.card.description);
+            expect(responsePage.meta.card).toHaveProperty('imageUrl', isUndefined(meta.card.imageUrl) ? oldPage.meta.card.imageUrl : meta.card.imageUrl);
+            expect(responsePage.meta.card).toHaveProperty('url', isUndefined(meta.card.url) ? oldPage.meta.card.url : meta.card.url);
+        }
+    }
 }
 
 module.exports = {
