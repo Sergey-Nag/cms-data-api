@@ -25,8 +25,6 @@ module.exports = {
                 )
             )
         )
-        
-        // resolve: authProtect(editPageProtect(PagesResolver.edit)),
     },
     addPage: {
         type: PageType,
@@ -43,7 +41,6 @@ module.exports = {
                 )
             )
         ) 
-        // resolve: authProtect(addPageProtect(PagesResolver.add)),
     },
     deletePage: {
         type: PageType,

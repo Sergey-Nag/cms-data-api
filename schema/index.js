@@ -2,6 +2,8 @@ const { GraphQLObjectType, GraphQLSchema } = require('graphql');
 const { userQueryFields, userMutationFields } = require('./user');
 const { pageQueryFields, pageMutationFields } = require('./page');
 const { ordersQueryFields, ordersMutationFields } = require('./orders');
+const { productsQueryFields, productsMutationFields } = require('./products');
+const { categoriesQueryFields, categoriesMutationFields } = require('./categories');
 
 const Query = new GraphQLObjectType({
     name: 'Query',
@@ -9,6 +11,8 @@ const Query = new GraphQLObjectType({
         ...pageQueryFields,
         ...userQueryFields,
         ...ordersQueryFields,
+        ...productsQueryFields,
+        ...categoriesQueryFields,
     },
 });
 
@@ -18,6 +22,8 @@ const Mutation = new GraphQLObjectType({
         ...pageMutationFields,
         ...userMutationFields,
         ...ordersMutationFields,
+        ...productsMutationFields,
+        ...categoriesMutationFields,
     },
 });
 

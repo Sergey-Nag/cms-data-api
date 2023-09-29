@@ -21,6 +21,9 @@ module.exports = class ApiErrorFactory {
     static pageAliasInvalid(alias) {
         return new Error(`Page alias${!!alias ? ` "${alias}"` : ''} is invalid! It should be in kebabCase${!!alias && kebabCase(alias) !== alias ? `, like this "${kebabCase(alias)}"` : ''}.`);
     }
+    static productAliasInvalid(alias) {
+        return new Error(`Product alias${!!alias ? ` "${alias}"` : ''} is invalid! It should be in kebabCase${!!alias && kebabCase(alias) !== alias ? `, like this "${kebabCase(alias)}"` : ''}.`);
+    }
     static pagePathIsEmpty() {
         return new Error('Page path shouln\'t be empty! At least on item is required.');
     }
@@ -85,5 +88,21 @@ module.exports = class ApiErrorFactory {
     }
     static orderNotFound() {
         return new Error('Order not found');
+    }
+    static productNotFound() {
+        return new Error('Product not found');
+    }
+    static categoryNotFound() {
+        return new Error('Category not found');
+    }
+    static productNameInvalid() {
+        return new Error('Invalid product name!');
+    }
+    static productAlreadyExist(prop) {
+        return new Error(
+            prop 
+            ? `Product with the same ${prop} already exists!`
+            : 'Product already exists!'
+        );
     }
 }

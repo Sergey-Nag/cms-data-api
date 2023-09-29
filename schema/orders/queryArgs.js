@@ -28,6 +28,7 @@ const PaginatedOrdersType = new GraphQLObjectType({
         },
         end: { type: GraphQLInt },
         itemsLeft: { type: GraphQLInt },
+        totalItems: { type: GraphQLInt },
     }
 });
 

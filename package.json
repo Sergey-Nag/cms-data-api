@@ -8,7 +8,10 @@
     "start:dev": "cross-env NODE_ENV=development node index.js",
     "dev": "nodemon index.js",
     "test": "cross-env NODE_ENV=test jest --testTimeout=10000",
-    "test:watch": "npm run test -- --watchAll --verbose"
+    "test:watch": "npm run test -- --watchAll"
+  },
+  "nodemonConfig": {
+    "ignore": ["__tests__/**", "**/storage/**"]
   },
   "keywords": [],
   "author": "",

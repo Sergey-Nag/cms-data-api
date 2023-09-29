@@ -192,14 +192,9 @@ describe('pages query', () => {
             [mockPages[1]]
         ],
         [
-            '3 pages that start with same path',
-            `path: ["new", "path"]`,
-            [mockPages[1], mockPages[3], mockPages[4]]
-        ],
-        [
-            '1 page by full path',
-            `path: ["new", "path", "with", "new", "page"]`,
-            [mockPages[4]]
+            '3 pages that has "index" and "page" in path',
+            `path: ["index", "page"]`,
+            [mockPages[0], mockPages[1], mockPages[4]]
         ],
         [
             '2 pages that have same keyword in meta',

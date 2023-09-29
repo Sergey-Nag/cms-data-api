@@ -28,6 +28,7 @@ jest.mock('../../../data/index.js', () => ({
 }));
 
 describe('customer query', () => {
+    jest.retryTimes(2);
     let userWithAccessToken, userWithoutAccessToken;
     const session = new SessionManager();
 

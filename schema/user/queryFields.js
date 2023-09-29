@@ -13,7 +13,7 @@ const querySortPaginationFields = {
     },
     pagination: {
         type: PaginationInput
-    }
+    },
 }
 
 const queryAdminFields = {

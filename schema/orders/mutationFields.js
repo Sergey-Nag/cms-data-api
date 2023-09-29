@@ -1,5 +1,5 @@
 const { GraphQLID, GraphQLNonNull } = require('graphql');
-const { canEditProtect } = require('../utils');
+const { canEditProtect, canDeleteProtect } = require('../utils');
 const OrdersResolver = require('./OrdersResolver');
 const { NewOrderInput, EditOrderInput } = require('./mutationArgs');
 const { OrderType } = require('./type');
@@ -23,9 +23,16 @@ module.exports = {
             input: { type: GraphQLNonNull(EditOrderInput) }
         },
         resolve: canEditProtect('orders', 
-            editOrderProtection(
-                ordersResolver.edit.bind(ordersResolver)
-            )
+            ordersResolver.edit.bind(ordersResolver)
         )
-    }
+    },
+    deleteOrder: {
+        type: OrderType,
+        args: {
+            id: { type: GraphQLNonNull(GraphQLID) },
+        },
+        resolve: canDeleteProtect('orders', 
+            ordersResolver.delete.bind(ordersResolver)
+        )
+    },
 }

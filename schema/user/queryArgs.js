@@ -55,6 +55,7 @@ const PaginatedAdminsType = new GraphQLObjectType({
         },
         end: { type: GraphQLInt },
         itemsLeft: { type: GraphQLInt },
+        totalItems: { type: GraphQLInt },
     })
 })
 
@@ -66,6 +67,7 @@ const PaginatedCustomersType = new GraphQLObjectType({
         },
         end: { type: GraphQLInt },
         itemsLeft: { type: GraphQLInt },
+        totalItems: { type: GraphQLInt },
     })
 })
 

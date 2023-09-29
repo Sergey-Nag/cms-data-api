@@ -1,30 +1,37 @@
 const { isEmpty } = require("lodash");
 const DataMutations = require("../data/dataMutations/DataMutations");
 const DataFinder = require("../data/dataMutations/filter/DataFinder");
+const DataFilter = require("../data/dataMutations/filter/DataFilter");
 
 class DataResolver {
-    constructor(repository, model, validator) {
+    constructor(repository, model, validator = null) {
         this.repository = repository;
         this.model = model;
         this.validator = validator;
     }
 
-    async getAll(parent, { filter, sort, pagination } = {}, context) {
+    async getAll(parent, { filter, sort, pagination } = {}) {
         await this.repository.load();
+        
         const dataMutation = new DataMutations({ filter, sort, pagination }, true);
-        const allData = this.repository
-        .data
-        .map((data) => new this.model(data));
+        let allData = this.repository.data.map((data) => new this.model(data));
+
+        if (parent) {
+            const tempFilter = new DataFilter(parent, true);
+            allData = tempFilter.filter(allData);
+        }
+
+        const totalItems = allData.length;
         
         const result = dataMutation.mutate(allData);
         
         if (pagination) {
-            return result;
+            return {...result, totalItems };
         }
-        return { items: result };
+        return { items: result, totalItems };
     }
 
-    async get(parent, { find } = {}, context) {
+    async get(parent, { find } = {}) {
         if (isEmpty(find)) return;
 
         await this.repository.load();

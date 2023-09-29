@@ -9,11 +9,10 @@ class Matcher {
     }
 
     getItemValue(item) {
-        let itemValue = item[this.propertyName];
+        let itemValue = this.propertyName ? item[this.propertyName] : item;
         if (typeof itemValue === 'function') {
             itemValue = itemValue.call(item);
         }
-
         return itemValue;
     }
 }

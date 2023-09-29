@@ -22,7 +22,7 @@ class OrderValidator {
     }
 
     static dataNotFound() {
-        throw ApiErrorFactory.userNotFound();
+        throw ApiErrorFactory.orderNotFound();
     }
 }
 

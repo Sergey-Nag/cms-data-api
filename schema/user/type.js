@@ -6,6 +6,7 @@ const { OrderStatusEnum, OrderProductType } = require('../orders/unions');
 const { canSeeProtect, getPriceFromProducts, getCurrentStatus } = require('../utils');
 const UserInterface = require('../interfaces/UserInterface');
 const EditableModelInterface = require('../interfaces/EditableModelInterface');
+const CreatableModelInterface = require('../interfaces/CreatableModelInteface');
 
 const AdminPagesRights = new GraphQLObjectType({
     name: 'AdminPagesRights',
@@ -30,7 +31,7 @@ const adminsResolver = new AdminsResolver();
 
 const AdminType = new GraphQLObjectType({
     name: 'Admin',
-    interfaces: [UserInterface, EditableModelInterface],
+    interfaces: [UserInterface, CreatableModelInterface, EditableModelInterface],
     fields: () => ({
         id: { type: GraphQLID },
         firstname: { type: GraphQLString },

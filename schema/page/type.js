@@ -3,6 +3,7 @@ const {AdminType} = require('../user/type');
 const AdminsResolver = require('../user/AdminsResolver');
 const { canSeeProtect } = require('../utils');
 const EditableModelInterface = require('../interfaces/EditableModelInterface');
+const CreatableModelInterface = require('../interfaces/CreatableModelInteface');
 
 const SocialMediasCardType = new GraphQLObjectType({
     name: 'SocialMediasCard',
@@ -29,7 +30,7 @@ const adminsResolver = new AdminsResolver();
 
 const PageType = new GraphQLObjectType({
     name: 'Page',
-    interfaces: [EditableModelInterface],
+    interfaces: [CreatableModelInterface, EditableModelInterface],
     fields: () => ({
         id: { type: GraphQLString },
         path: { type: new GraphQLList(GraphQLString) },

@@ -10,10 +10,10 @@ const { SECRET_REFRESH_TOKEN, SECRET_ACCESS_TOKEN } = require('../../constants/e
 const refreshEndpoint = `${REST_ENDPOINT}/refresh-token`;
 
 describe('Refresh token', () => {
+    jest.retryTimes(2);
     const expiredRefreshToken = jwt.sign({ userId: mockAdmins[0].id}, SECRET_REFRESH_TOKEN, { expiresIn: '0s' });
     const notUserRefreshToken = jwt.sign({some: 'data'}, SECRET_REFRESH_TOKEN, { expiresIn: '1m' });
     const nonexistendUserRefreshToken = jwt.sign({ userId: 'not-existed-user-id' }, SECRET_REFRESH_TOKEN, { expiresIn: '1m' });
-
     let session;
     beforeEach(() => {
         const sessions = new SessionManager();

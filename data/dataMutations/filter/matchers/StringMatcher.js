@@ -16,7 +16,6 @@ class StringMatcher extends Matcher {
         const value = this.getItemValue(item);
         
         if (typeof value !== 'string') return false;
-
         return value.toLowerCase().includes(this.expectedValue.toLowerCase());
     }
 }

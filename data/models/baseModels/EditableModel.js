@@ -1,7 +1,7 @@
-const UniqIdModel = require("../baseModels/UniqIdModel");
+const UniqIdModel = require("./UniqIdModel");
 
-class PageEditableModel extends UniqIdModel {
-    constructor({ id, createdById, modifiedById, createdISO, lastModifiedISO, ...data }, idPrefix) {
+class EditableModel extends UniqIdModel {
+    constructor({ id, createdById, modifiedById, createdISO, lastModifiedISO }, idPrefix) {
         super(id, idPrefix);
         this.createdById = createdById ?? null;
         this.createdISO = createdISO ?? new Date().toISOString();
@@ -15,4 +15,4 @@ class PageEditableModel extends UniqIdModel {
     } 
 }
 
-module.exports = PageEditableModel;
+module.exports = EditableModel;

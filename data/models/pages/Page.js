@@ -1,8 +1,8 @@
 const kebabCase = require('lodash/kebabCase');
-const PageEditableModel = require('./PageEditableModel');
+const EditableModel = require('../baseModels/EditableModel');
 const PageMetaData = require('./PageMetaData');
 
-class Page extends PageEditableModel {
+class Page extends EditableModel {
     constructor({ path, alias, title, contentId, isPublished, meta, ...data }) {
         super(data, 'P');
 

@@ -1,0 +1,226 @@
+[
+    {
+        "id": "PTtest-id-1",
+        "createdById": "Atest-id-1",
+        "createdISO": "2023-09-27T21:23:00.648Z",
+        "modifiedById": null,
+        "lastModifiedISO": null,
+        "name": "Nike Air Force 225 v2",
+        "alias": "nike-air-force-225-v-2",
+        "description": "New AirForce sneakers from Nike",
+        "price": 149.99,
+        "priceHistory": [
+            {
+                "price": 149.99,
+                "createdById": "Atest-id-1",
+                "createdISO": "2023-09-27T21:23:00.649Z"
+            }
+        ],
+        "categoriesId": ["CATtest-id-1", "CATtest-id-2"],
+        "tags": ["sneakers", "shoes", "nike", "airforce"],
+        "stock": {
+            "amount": 20,
+            "lowStockAlert": 10
+        },
+        "characteristics": [
+            {
+                "name": "Weight",
+                "value": "0.2 kg"
+            },
+            {
+                "name": "Sex",
+                "value": "Unisex"
+            }
+        ],
+        "options": [
+            {
+                "name": "Size",
+                "options": ["39", "40", "41", "42", "43", "44", "45"]
+            },
+            {
+                "name": "Color",
+                "options": ["White", "Gray", "Black"]
+            }
+        ],
+        "isPublished": false,
+        "coverPhotoUrl": null,
+        "photosUrl": null
+    },
+    {
+        "id": "PTtest-id-2",
+        "createdById": "Atest-id-1",
+        "createdISO": "2023-09-28T10:15:00.648Z",
+        "modifiedById": null,
+        "lastModifiedISO": null,
+        "name": "Adidas Running Shoes",
+        "alias": "adidas-running-shoes",
+        "description": "High-performance running shoes from Adidas",
+        "price": 129.99,
+        "priceHistory": [
+            {
+                "price": 129.99,
+                "createdById": "Atest-id-1",
+                "createdISO": "2023-09-28T10:15:00.649Z"
+            }
+        ],
+        "categoriesId": ["CATtest-id-1", "CATtest-id-2"],
+        "tags": ["running", "shoes", "adidas"],
+        "stock": {
+            "amount": 15,
+            "lowStockAlert": 5
+        },
+        "characteristics": [
+            {
+                "name": "Weight",
+                "value": "0.18 kg"
+            },
+            {
+                "name": "Sex",
+                "value": "Men"
+            }
+        ],
+        "options": [
+            {
+                "name": "Size",
+                "options": ["41", "42", "43", "44", "45"]
+            },
+            {
+                "name": "Color",
+                "options": ["Blue", "Red", "Black"]
+            }
+        ],
+        "isPublished": true,
+        "coverPhotoUrl": "http://some.com/photo.png",
+        "photosUrl": null
+    },
+    {
+        "id": "PTtest-id-3",
+        "createdById": "Atest-id-1",
+        "createdISO": "2023-09-29T14:30:00.648Z",
+        "modifiedById": null,
+        "lastModifiedISO": null,
+        "name": "Sony Noise-Canceling Headphones",
+        "alias": "sony-noise-canceling-headphones",
+        "description": "Immerse yourself in music with Sony's premium headphones",
+        "price": 299.99,
+        "priceHistory": [
+            {
+                "price": 299.99,
+                "createdById": "Atest-id-1",
+                "createdISO": "2023-09-29T14:30:00.649Z"
+            }
+        ],
+        "categoriesId": ["CATtest-id-3"],
+        "tags": ["headphones", "sony", "music"],
+        "stock": {
+            "amount": 10,
+            "lowStockAlert": 3
+        },
+        "characteristics": [
+            {
+                "name": "Weight",
+                "value": "0.25 kg"
+            },
+            {
+                "name": "Type",
+                "value": "Over-Ear"
+            }
+        ],
+        "options": [
+            {
+                "name": "Color",
+                "options": ["Black", "White"]
+            }
+        ],
+        "isPublished": true,
+        "coverPhotoUrl": null,
+        "photosUrl": null
+    },
+    {
+        "id": "PTtest-id-4",
+        "createdById": "Atest-id-2",
+        "createdISO": "2023-09-30T09:45:00.648Z",
+        "modifiedById": "Atest-id-1",
+        "lastModifiedISO": "2023-09-30T10:20:00.649Z",
+        "name": "Harry Potter and the Sorcerer's Stone",
+        "alias": "harry-potter-sorcerers-stone",
+        "description": "The first book in the Harry Potter series",
+        "price": 12.99,
+        "priceHistory": [
+            {
+                "price": 11.99,
+                "createdById": "Atest-id-2",
+                "createdISO": "2023-09-30T09:45:00.649Z"
+            },
+            {
+                "price": 12.99,
+                "createdById": "Atest-id-1",
+                "createdISO": "2023-09-30T10:20:00.649Z"
+            }
+        ],
+        "categoriesId": ["CATtest-id-4"],
+        "tags": ["books", "harrypotter", "fantasy"],
+        "stock": {
+            "amount": 30,
+            "lowStockAlert": 10
+        },
+        "characteristics": [
+            {
+                "name": "Pages",
+                "value": "320"
+            },
+            {
+                "name": "Author",
+                "value": "J.K. Rowling"
+            }
+        ],
+        "options": [],
+        "isPublished": true,
+        "coverPhotoUrl": "http://some.com/another-cover-photo.png",
+        "photosUrl": [
+            "http://some.com/some-photo-1.png",
+            "http://some.com/some-photo-2.png",
+            "http://some.com/some-photo-3.png"
+        ]
+    },
+    {
+        "id": "PTtest-id-5",
+        "createdById": "Atest-id-2",
+        "createdISO": "2023-10-01T18:20:00.648Z",
+        "modifiedById": null,
+        "lastModifiedISO": null,
+        "name": "Modern Glass Coffee Table",
+        "alias": "modern-glass-coffee-table",
+        "description": "Elegant glass coffee table for your living room",
+        "price": 199.99,
+        "priceHistory": [
+            {
+                "price": 199.99,
+                "createdById": "Atest-id-2",
+                "createdISO": "2023-10-01T18:20:00.649Z"
+            }
+        ],
+        "categoriesId": ["CATtest-id-5", "CATtest-id-7"],
+        "tags": ["furniture", "table", "livingroom"],
+        "stock": {
+            "amount": 8,
+            "lowStockAlert": 2
+        },
+        "characteristics": [
+            {
+                "name": "Material",
+                "value": "Glass"
+            },
+            {
+                "name": "Dimensions",
+                "value": "120cm x 60cm x 45cm"
+            }
+        ],
+        "options": [],
+        "isPublished": true,
+        "coverPhotoUrl": null,
+        "photosUrl": [
+            "http://some.com/some-photo-5.png"
+        ]
+    }
+]

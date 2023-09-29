@@ -1,0 +1,37 @@
+[
+    {
+        "id": "CATtest-id-1",
+        "name": "Clothes",
+        "alias": "clothes"
+    },
+    {
+        "id": "CATtest-id-2",
+        "name": "Shoes",
+        "alias": "shoes"
+    },
+    {
+        "id": "CATtest-id-3",
+        "name": "Electronics",
+        "alias": "electronics"
+    },
+    {
+        "id": "CATtest-id-4",
+        "name": "Books",
+        "alias": "books"
+    },
+    {
+        "id": "CATtest-id-5",
+        "name": "Home Decor",
+        "alias": "home-decor"
+    },
+    {
+        "id": "CATtest-id-6",
+        "name": "Toys",
+        "alias": "toys"
+    },
+    {
+        "id": "CATtest-id-7",
+        "name": "Furniture",
+        "alias": "furniture"
+    }
+]

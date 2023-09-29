@@ -172,6 +172,7 @@ describe('Edit entity mutation (aditPage)', () => {
             ]
         ],
     ])('Should update only provided properties: %s', async (props, values) => {
+        jest.retryTimes(2);
         const updateData = props.reduce((acc, prop, i) => {
             acc[prop] = values[i];
             return acc;

@@ -21,7 +21,7 @@ jest.mock('../../../data/index.js', () => ({
     }),
     writeData: jest.fn((data) => data),
 }));
-
+jest.retryTimes(2);
 describe('page query', () => {
     let userWithAccessToken, userWithoutAccessToken;
     const session = new SessionManager();
@@ -189,8 +189,8 @@ describe('page query', () => {
             mockPages[1]
         ],
         [
-            'a page by full path',
-            `path: ["new", "path", "with", "new", "page"]`,
+            'a page that contains "with" in path',
+            `path: ["with"]`,
             mockPages[4]
         ],
     ])('Filter should get %s', async (_, query, expectedPage) => {

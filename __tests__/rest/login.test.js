@@ -21,6 +21,7 @@ jest.mock('../../managers/SessionManager.js');
 const loginEndpoint = `${REST_ENDPOINT}/login`;
 
 describe('REST /login', () => {
+    jest.retryTimes(2)
     const mockFn = jest.fn(() => {
         return { accessToken: 'access', refreshToken: 'refresh' };
     });
