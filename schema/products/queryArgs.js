@@ -3,12 +3,13 @@ const { ProductType } = require("./type");
 const NumberSearchInput = require("../_sharedTypes/NumberSearchInput");
 const { SortInput } = require("../utils/sort");
 const { PaginationInput } = require("../utils/pagination");
+const MixedScalar = require("../_sharedTypes/MixedScalar");
 
 const CharacteristicInput = new GraphQLInputObjectType({
     name: 'CharacteristicInput',
     fields: {
         name: { type: GraphQLString },
-        value: { type: GraphQLString },
+        value: { type: MixedScalar },
     }
 });
 
@@ -16,7 +17,7 @@ const ProductOptionInput = new GraphQLInputObjectType({
     name: 'ProductOptionInput',
     fields: {
         name: { type: GraphQLString },
-        options: { type: GraphQLList(GraphQLString) },
+        options: { type: GraphQLList(MixedScalar) },
     }
 }); 
 

@@ -1,4 +1,4 @@
-const { GraphQLScalarType } = require("graphql");
+const { GraphQLScalarType, Kind } = require("graphql");
 
 const MixedScalar = new GraphQLScalarType({
     name: 'MixedScalar',
@@ -13,7 +13,7 @@ const MixedScalar = new GraphQLScalarType({
         ) {
             return value;
         }
-        throw new Error('MixedScalar cannot represent an invalid value.');
+        throw new Error('MixedScalar cannot serialize an invalid value.');
     },
     parseValue(value) {
         // Ensure the parsed value is a valid type (string, number, boolean, or null)
@@ -25,15 +25,17 @@ const MixedScalar = new GraphQLScalarType({
         ) {
             return value;
         }
-        throw new Error('MixedScalar cannot represent an invalid value.');
+        throw new Error('MixedScalar cannot parse an invalid value.');
     },
     parseLiteral(ast) {
         switch (ast.kind) {
             case Kind.STRING:
+                return String(ast.value);
             case Kind.INT:
             case Kind.FLOAT:
+                return Number(ast.value)
             case Kind.BOOLEAN:
-                return ast.value;
+                return Boolean(ast.value);
             default:
                 throw new Error('MixedScalar cannot represent an invalid value.');
         }
