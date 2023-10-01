@@ -1,14 +1,8 @@
-1. Single Responsibility Principle (SRP):
-Separate classes for database access, permission validation, and data manipulation.
+# Launch server
+* `npm run start:local` - runs in production mode (without GraphiQl and Swagger documentations)
+* `npm run start:dev` - runs in development mode (with documetnations)
+  - http://localhost:4000 - server address
+  - http://localhost:4000/graphql - Graphiql playground and documentation
+  - http://localhost:${PORT}/api-docs - REST API Swagger documentation
 
-2. Open/Closed Principle (OCP):
-Base classes as interfaces to define common behavior, and create derived classes for specific actions.
 
-3. Liskov Substitution Principle (LSP):
-Derived classes should be substitutable for their base classes. This means that you should be able to use instances of derived classes wherever you use instances of the base class.
-
-4. Interface Segregation Principle (ISP):
-Clients should not be forced to depend on interfaces they do not use. Keep interfaces focused and avoid bloating them with methods that are irrelevant to certain implementations.
-
-5. Dependency Inversion Principle (DIP):
-High-level modules should not depend on low-level modules. Both should depend on abstractions. Use dependency injection to invert the control of dependencies.
