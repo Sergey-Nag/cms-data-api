@@ -35,6 +35,14 @@ const customersResolver = new CustomersResolver();
 
 /** @type {import('graphql/type/definition').GraphQLFieldConfigMap} */
 module.exports = {
+    me: {
+        type: AdminType,
+        resolve: authProtect(
+            (parent, auth, { actionUser }) => {
+                return actionUser
+            }
+        )
+    },
     admins: {
         type: PaginatedAdminsType,
         args: queryAdminFields,

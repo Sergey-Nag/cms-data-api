@@ -1,4 +1,4 @@
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'admin';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'admin@admin.a';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? ADMIN_EMAIL;
 const ADMIN_ID = process.env.ADMIN_ID ?? 'Admin-id';
 
