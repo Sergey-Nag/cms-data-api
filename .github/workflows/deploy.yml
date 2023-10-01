@@ -1,9 +1,9 @@
-name: Deploy (only tests for now)
+name: Deploy
 
-on:
-  push:
-    branches:
-      - master
+# on:
+  # push:
+  #   branches:
+  #     - master
 
 jobs:
   test:
