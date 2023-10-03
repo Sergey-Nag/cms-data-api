@@ -16,10 +16,7 @@ module.exports = class UserAuthenticationService {
         }
     }
     static #validatePasword(password) {
-        if (
-            typeof password !== 'string' ||
-            !PASSWORD_VALIDATION_REGEXP.test(password)
-        ) {
+        if (typeof password !== 'string') {
             throw ApiErrorFactory.userPasswordInvalid();
         }
     }
