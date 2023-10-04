@@ -80,7 +80,7 @@ describe('customer query', () => {
         expect(response.body.data.orders).toBeNull();
     });
 
-    it('Should get orders withh all data by admin that has access', async () => {
+    it('Should get orders with all data by admin that has access', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
@@ -90,7 +90,9 @@ describe('customer query', () => {
                             id
                             description
                             orderProducts {
-                                product
+                                product {
+                                    name
+                                }
                                 fixedPrice
                                 amount
                             }

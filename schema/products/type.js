@@ -5,17 +5,9 @@ const CreatableModelInterface = require("../interfaces/CreatableModelInteface");
 const MixedScalar = require("../_sharedTypes/MixedScalar");
 const AdminsResolver = require("../user/AdminsResolver");
 const CategoriesResolver = require("../categories/CategoriesResolver");
+const { ProductCategoryType } = require("./sharedTypes");
 
 const adminsResolver = new AdminsResolver();
-
-const ProductCategoryType = new GraphQLObjectType({
-    name: 'ProductCategory',
-    fields: {
-        id: { type: GraphQLNonNull(GraphQLID) },
-        name: { type: GraphQLNonNull(GraphQLString) },
-        alias: { type: GraphQLString },
-    },
-});
 
 const StockType = new GraphQLObjectType({
     name: 'Stock',
@@ -41,6 +33,8 @@ const ProductCharacteristicType = new GraphQLObjectType({
     }
 });
 
+const categoriesResolver = new CategoriesResolver();
+
 const PriceHistoryType = new GraphQLObjectType({
     name: 'PriceHistory',
     interfaces: [CreatableModelInterface],
@@ -53,8 +47,8 @@ const PriceHistoryType = new GraphQLObjectType({
                     null,
                     {
                         find: { 
-                            id: createdById 
-                        } 
+                            id: createdById
+                        }
                     },
                     context
                 );
@@ -63,7 +57,6 @@ const PriceHistoryType = new GraphQLObjectType({
         createdISO: { type: GraphQLString },
     }
 });
-const categoriesResolver = new CategoriesResolver();
 
 const ProductType = new GraphQLObjectType({
     name: 'Product',
@@ -123,5 +116,5 @@ const ProductType = new GraphQLObjectType({
 });
 
 module.exports = {
-    ProductType
+    ProductType,
 }

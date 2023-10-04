@@ -61,9 +61,6 @@ describe('REST /login', () => {
             'Invalid password with empty password', { email: 'ok@email.com', password: '' }, ApiErrorFactory.userPasswordInvalid(),
         ],
         [
-            'Invalid password with password "1"', { email: 'ok@email.com', password: '1' }, ApiErrorFactory.userPasswordInvalid(),
-        ],
-        [
             'Invalid password with numbers in password',
             { email: 'ok@email.com', password: 123 },
             ApiErrorFactory.userPasswordInvalid(),

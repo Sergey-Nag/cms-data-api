@@ -16,9 +16,14 @@ const EditAdminInput = new GraphQLInputObjectType({
     name: 'EditAdminInput',
     fields: adminEditableFields,
 });
+
+const customerEditableFields = {
+    ...userEditableFields,
+    phone: { type: GraphQLString },
+}
 const EditCustomerInput = new GraphQLInputObjectType({
     name: 'EditCustomerInput',
-    fields: userEditableFields,
+    fields: customerEditableFields,
 });
 
 const NewAdminInput = new GraphQLInputObjectType({
@@ -35,6 +40,7 @@ const NewCustomerInput = new GraphQLInputObjectType({
     name: 'NewCustomerInput',
     fields: {
         email: { type: new GraphQLNonNull(GraphQLString) },
+        phone: { type: GraphQLString },
         firstname: { type: GraphQLString },
         lastname: { type: GraphQLString },
     },

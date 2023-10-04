@@ -1,11 +1,14 @@
 const User = require("./User");
 
 class Customer extends User {
-    constructor({ orders, ...data}) {
+    constructor({ phone, ...data}) {
         super(data, 'C');
+        this.phone = phone ?? null;
     }
 
-    update(data) {
+    update({phone, ...data}) {
+        this.phone = phone;
+
         super.update(data);
     }
 }

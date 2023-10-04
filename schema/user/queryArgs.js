@@ -43,6 +43,7 @@ const CustomerFilterInput = new GraphQLInputObjectType({
         firstname: { type: GraphQLString },
         lastname: { type: GraphQLString },
         email: { type: GraphQLString },
+        phone: { type: GraphQLString },
     }
 });
 

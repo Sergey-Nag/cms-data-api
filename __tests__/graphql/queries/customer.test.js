@@ -94,7 +94,9 @@ describe('customer query', () => {
                             id
                             description
                             orderProducts {
-                                product
+                                product {
+                                    name
+                                }
                                 amount
                             }
                             shippingAddress

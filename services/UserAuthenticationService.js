@@ -16,13 +16,18 @@ module.exports = class UserAuthenticationService {
         }
     }
     static #validatePasword(password) {
-        if (typeof password !== 'string') {
+        if (
+            typeof password !== 'string' ||
+            !PASSWORD_VALIDATION_REGEXP.test(password)
+        ) {
             throw ApiErrorFactory.userPasswordInvalid();
         }
     }
     static async authenticateUser(email, password) {
         this.#validateEmail(email);
-        this.#validatePasword(password);
+        if (typeof password !== 'string' || password.length === 0) {
+            throw ApiErrorFactory.userPasswordInvalid();
+        }
 
         const repo = new Repository(ADMINS_REPO_NAME);
         await repo.load();
@@ -32,8 +37,9 @@ module.exports = class UserAuthenticationService {
         if (!user) {
             throw ApiErrorFactory.userCredentialsInvalid();
         }
+
         const admin = new Admin(user);
-        
+
         if (!(await admin.isPasswordValidAsync(password))) {
             throw ApiErrorFactory.userCredentialsInvalid();
         }

@@ -104,6 +104,7 @@ const CustomerType = new GraphQLObjectType({
         firstname: { type: GraphQLString },
         lastname: { type: GraphQLString },
         email: { type: GraphQLString },
+        phone: { type: GraphQLString },
         orders: { 
             type: GraphQLList(CustomerOrderType),
             resolve: canSeeProtect('orders',  async ({ id }) => {
