@@ -1,3 +1,5 @@
 node_modules
 data/storage
 .DS_Store
+
+.nvmrc
