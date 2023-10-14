@@ -25,11 +25,7 @@ class ProductsResolver extends DataResolver {
             this.#mutatePhotosFilter(args.filter);
         }
 
-        if (args.filter && 'sold' in args.filter) {
-            return this.getAllWithSold(parent, args, context);
-        }
-
-        return await super.getAll(parent, args, context);
+        return this.getAllWithSold(parent, args, context);
     }
 
     async getAllWithSold(parent, { filter, sort, pagination }, context) {

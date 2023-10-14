@@ -268,6 +268,28 @@ describe('products query', () => {
             },
             [3, 4]
         ],
+        // TODO: uncomment when sold property will be added to products
+        // [
+        //     'sold products',
+        //     {
+        //         sold: '> 0',
+        //     },
+        //     [0, 1, 2, 4]
+        // ],
+        [
+            'price grater than 100',
+            {
+                price: '> 100'
+            },
+            [0, 1, 2, 4]
+        ],
+        [
+            'price grater than 100 and less or equal than 199.99',
+            {
+                price: '> 100 && <= 199.99'
+            },
+            [0, 1, 4]
+        ],
     ])('Should filter by %s', async (_, filter, expectedItemIndexes) => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({

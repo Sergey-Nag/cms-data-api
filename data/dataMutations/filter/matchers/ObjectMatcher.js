@@ -1,3 +1,4 @@
+const { NUMBER_SERACH_INPUT_REGEXP } = require("../../../../constants/regexp");
 const Matcher = require("./Matcher");
 const NumberMatcher = require("./NumberMatcher");
 const StringMatcher = require("./StringMatcher");
@@ -18,7 +19,7 @@ class MatcherFactory {
     
     static isNumericValue(expectedValue) {
         return typeof expectedValue === "number" ||
-            typeof expectedValue === 'string' && /^([<>]=?|==) ?\d+(\.\d+)?$/.test(expectedValue);
+            typeof expectedValue === 'string' && NUMBER_SERACH_INPUT_REGEXP.test(expectedValue);
     }
 }
 
