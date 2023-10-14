@@ -5,6 +5,8 @@ const Product = require("../../data/products/Product");
 const Repository = require("../../data/repositories/Repository");
 const ProductValidator = require("../../data/validators/ProductValidator");
 const DataResolver = require("../DataResolver");
+const { getSoldProducts } = require("./utils");
+const DataMutations = require("../../data/dataMutations/DataMutations");
 
 class ProductsResolver extends DataResolver {
     static instance = null;
@@ -23,7 +25,31 @@ class ProductsResolver extends DataResolver {
             this.#mutatePhotosFilter(args.filter);
         }
 
+        if (args.filter && 'sold' in args.filter) {
+            return this.getAllWithSold(parent, args, context);
+        }
+
         return await super.getAll(parent, args, context);
+    }
+
+    async getAllWithSold(parent, { filter, sort, pagination }, context) {
+        await this.repository.load();
+
+        const dataMutation = new DataMutations({ filter, sort, pagination }, true);
+        let allData = await Promise.all(this.repository.data.map(async (data) => {
+            const product = new this.model(data);
+            const sold = await getSoldProducts(product);
+            return { ...product, sold };
+        }));
+
+        const result = dataMutation.mutate(allData);
+        const totalItems = dataMutation.itemsLengthAfterFilter;
+
+        if (pagination) {
+            return {...result, totalItems };
+        }
+
+        return { items: result, totalItems };
     }
 
     async get(parent, args, context) {
@@ -34,18 +60,18 @@ class ProductsResolver extends DataResolver {
         return await super.get(parent, args, context);
     }
 
-    async add(parent, { input } = {}, {actionUser} = {}) {
+    async add(parent, { input } = {}, { actionUser } = {}) {
         this.validator?.validateDataToCreate(input);
         await this.repository.load();
 
-        const newProduct = new this.model({...input, createdById: actionUser?.id });
+        const newProduct = new this.model({ ...input, createdById: actionUser?.id });
 
         if (input.alias === undefined) {
             this.#handleAliasDuplication(newProduct);
         }
 
         const addedData = this.repository.add(newProduct);
-        
+
         await this.repository.save();
         return addedData;
     }

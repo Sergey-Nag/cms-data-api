@@ -51,7 +51,8 @@ const ProductFilterInput = new GraphQLInputObjectType({
         lastModifiedISO: { type: GraphQLString },
         modifiedById: { type: GraphQLID },
         characteristics: { type: GraphQLList(CharacteristicInput) },
-        options: { type: GraphQLList(ProductOptionInput) }
+        options: { type: GraphQLList(ProductOptionInput) },
+        sold: { type: NumberSearchInput },
     }
 });
 

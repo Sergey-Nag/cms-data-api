@@ -6,6 +6,7 @@ const NumberSearchInput = new GraphQLScalarType({
     serialize(value) {
         if (
             typeof value === 'string' ||
+            typeof value === 'number' ||
             value === null
         ) {
             return value;
@@ -15,6 +16,7 @@ const NumberSearchInput = new GraphQLScalarType({
     parseValue(value) {
         if (
             typeof value === 'string' ||
+            typeof value === 'number' ||
             value === null
         ) {
             return value;
@@ -24,9 +26,10 @@ const NumberSearchInput = new GraphQLScalarType({
     parseLiteral(ast) {
         switch (ast.kind) {
             case Kind.STRING:
+                return ast.value;
             case Kind.INT:
             case Kind.FLOAT:
-                return ast.value;
+                return Number(ast.value);
             default:
                 throw new Error('NumberSearchInput cannot represent an invalid value.');
         }

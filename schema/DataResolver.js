@@ -15,15 +15,16 @@ class DataResolver {
         
         const dataMutation = new DataMutations({ filter, sort, pagination }, true);
         let allData = this.repository.data.map((data) => new this.model(data));
+        let totalItems = allData.length;
 
         if (parent) {
             const tempFilter = new DataFilter(parent, true);
             allData = tempFilter.filter(allData);
+            totalItems = allData.length;
         }
 
-        const totalItems = allData.length;
-        
         const result = dataMutation.mutate(allData);
+        totalItems = dataMutation.itemsLengthAfterFilter;
         
         if (pagination) {
             return {...result, totalItems };

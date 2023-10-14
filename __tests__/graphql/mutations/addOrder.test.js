@@ -1,17 +1,19 @@
 const mockAdmins = require('../../__mocks__/admins.json');
 const mockCustomers = require('../../__mocks__/customers.json');
 const mockOrders = require('../../__mocks__/orders.json');
+const mockProducts = require('../../__mocks__/products.json');
 const { readData } = require('../../../data/index.js');
 const server = require('../../../index');
 const supertest = require('supertest');
 const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const SessionManager = require('../../../managers/SessionManager');
-const { CUSTOMERS_REPO_NAME, ORDERS_REPO_NAME, ADMINS_REPO_NAME } = require('../../../constants/repositoryNames');
+const { CUSTOMERS_REPO_NAME, ORDERS_REPO_NAME, ADMINS_REPO_NAME, PRODUCTS_REPO_NAME } = require('../../../constants/repositoryNames');
 
 const mockCustomersRepoName = CUSTOMERS_REPO_NAME;
 const mockAdminsRepoName = ADMINS_REPO_NAME;
 const mockOrdersRepoName = ORDERS_REPO_NAME;
+const mockProductsRepoName = PRODUCTS_REPO_NAME;
 
 jest.mock('../../../data/index.js', () => ({
     readData: jest.fn().mockImplementation((name) => {
@@ -21,6 +23,8 @@ jest.mock('../../../data/index.js', () => ({
             return Promise.resolve(mockOrders);
         } else if (name === mockAdminsRepoName) {
             return Promise.resolve(mockAdmins);
+        } else if (name === mockProductsRepoName) {
+            return Promise.resolve(mockProducts);
         }
         return []
     }),
@@ -47,7 +51,7 @@ describe('addOrder mutation', () => {
         jest.clearAllMocks();
     });
 
-    it('Should not get unauthorized error if requests without Auth header', async () => {
+    it('Should not get unauthorized error if requests without Auth header, Instead get Product not found error', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `mutation {
@@ -62,8 +66,10 @@ describe('addOrder mutation', () => {
                 }`
             });
 
-        expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.addOrder).toBeDefined();
+        expect(response.body.data.addOrder).toBeNull();
+        expect(response.body.errors).toBeDefined();
+        expect(response.body.errors).toHaveLength(1);
+        expect(response.body.errors[0].message).toBe(ApiErrorFactory.productNotFound().message);
     });
 
     it('Should get Action forbidden error when user does not have access', async () => {
@@ -111,13 +117,13 @@ describe('addOrder mutation', () => {
                 customerId: mockCustomers[0].id,
                 orderProducts: [
                     {
-                        productId: "123",
+                        productId: mockProducts[3].id,
                         amount: 1
                     }
                 ],
             },
             {
-                totalPrice: 11.5
+                totalPrice: 12.99
             }
         ],
         [
@@ -127,11 +133,11 @@ describe('addOrder mutation', () => {
                 description: 'New description',
                 orderProducts: [
                     {
-                        productId: "123",
+                        productId: mockProducts[0].id,
                         amount: 1
                     },
                     {
-                        productId: "321",
+                        productId: mockProducts[1].id,
                         amount: 1
                     },
                 ],
@@ -139,7 +145,7 @@ describe('addOrder mutation', () => {
                 shippingAddress: "shipping address",
             },
             {
-                totalPrice: 23
+                totalPrice: 279.98
             }
         ],
         [
@@ -151,7 +157,7 @@ describe('addOrder mutation', () => {
                 },
                 orderProducts: [
                     {
-                        productId: "ololo",
+                        productId: mockProducts[0].id,
                         amount: 3
                     },
                 ],
@@ -159,7 +165,7 @@ describe('addOrder mutation', () => {
                 shippingAddress: "shipping address",
             },
             {
-                totalPrice: 34.5,
+                totalPrice: 449.97,
             }
         ],
     ])('Should add new order %s', async (_, input, result) => {
@@ -207,9 +213,9 @@ describe('addOrder mutation', () => {
 
         if (input.orderProducts) {
             expect(addOrder.orderProducts).toEqual(
-                input.orderProducts.map(({ amount }) => ({
+                input.orderProducts.map(({ amount, productId }) => ({
                     amount, 
-                    fixedPrice: 11.5
+                    fixedPrice: mockProducts.find(({ id }) => id === productId).price
                 }))
             );
         }

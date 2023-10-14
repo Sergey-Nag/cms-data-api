@@ -1,4 +1,4 @@
-const { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLBoolean, GraphQLFloat, GraphQLList, GraphQLScalarType, Kind, GraphQLInt, GraphQLNonNull } = require("graphql");
+const { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLBoolean, GraphQLFloat, GraphQLList, GraphQLInt, GraphQLNonNull } = require("graphql");
 const EditableModelInterface = require("../interfaces/EditableModelInterface");
 const { AdminType } = require("../user/type");
 const CreatableModelInterface = require("../interfaces/CreatableModelInteface");
@@ -6,14 +6,15 @@ const MixedScalar = require("../_sharedTypes/MixedScalar");
 const AdminsResolver = require("../user/AdminsResolver");
 const CategoriesResolver = require("../categories/CategoriesResolver");
 const { ProductCategoryType } = require("./sharedTypes");
+const { getSoldProducts } = require("./utils");
 
 const adminsResolver = new AdminsResolver();
 
 const StockType = new GraphQLObjectType({
     name: 'Stock',
     fields: {
-        amount: { type: GraphQLInt },
-        lowStockAlert: { type: GraphQLInt }
+        amount: { type: GraphQLNonNull(GraphQLInt) },
+        lowStockAlert: { type: GraphQLNonNull(GraphQLInt) }
     }
 });
 
@@ -66,7 +67,7 @@ const ProductType = new GraphQLObjectType({
         name: { type: GraphQLNonNull(GraphQLString) },
         alias: { type: GraphQLNonNull(GraphQLString) },
         description: { type: GraphQLString },
-        price: { type: GraphQLFloat },
+        price: { type: GraphQLNonNull(GraphQLFloat) },
         priceHistory: { type: GraphQLList(PriceHistoryType) },
         categories: { 
             type: GraphQLList(ProductCategoryType),
@@ -78,11 +79,15 @@ const ProductType = new GraphQLObjectType({
         tags: { type: GraphQLList(GraphQLString) },
         stock: { type: GraphQLNonNull(StockType) },
         characteristics: { type: GraphQLList(ProductCharacteristicType) },
-        isPublished: { type: GraphQLBoolean },
+        isPublished: { type: GraphQLNonNull(GraphQLBoolean) },
         coverPhotoUrl: { type: GraphQLString },
         photosUrl: { type: GraphQLList(GraphQLString) },
-        createdISO: { type: GraphQLString },
+        createdISO: { type: GraphQLNonNull(GraphQLString) },
         options: { type: GraphQLList(ProductOptionType) },
+        sold: {
+            type: GraphQLNonNull(GraphQLInt),
+            resolve: getSoldProducts,
+        },
         createdBy: {
             type: AdminType,
             resolve: async ({ createdById }, args, context) => {
