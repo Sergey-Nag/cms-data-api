@@ -92,11 +92,11 @@ class ProductsResolver extends DataResolver {
 
     #mutatePhotosFilter(filter) {
         if (typeof filter?.hasPhotos === 'boolean') {
-            filter.photosUrl = filter.hasPhotos ? ['*'] : null;
+            filter.photos = filter.hasPhotos ? true : null;
             delete filter.hasPhotos;
         }
         if (typeof filter?.hasCoverPhoto === 'boolean') {
-            filter.coverPhotoUrl = filter.hasCoverPhoto ? '' : null;
+            filter.coverPhoto = filter.hasCoverPhoto ? true : null;
             delete filter.hasCoverPhoto;
         }
     }

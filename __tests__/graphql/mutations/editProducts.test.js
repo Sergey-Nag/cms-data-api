@@ -234,8 +234,8 @@ describe('addProduct mutation', () => {
                     }
                 ],
                 description: mockProducts[3].description,
-                photosUrl: null,
-                coverPhotoUrl: null,
+                photos: null,
+                coverPhoto: null,
             }, 
             {
                 stock: {
@@ -255,8 +255,8 @@ describe('addProduct mutation', () => {
                     }
                 ],
                 isPublished: false,
-                photosUrl: null,
-                coverPhotoUrl: null,
+                photos: null,
+                coverPhoto: null,
             },
             {...mockProducts[3]}
         ],
@@ -311,8 +311,30 @@ describe('addProduct mutation', () => {
                         modifiedBy {
                             id
                         }
-                        photosUrl
-                        coverPhotoUrl
+                        photos {
+                            url
+                            id
+                            alt
+                            thumbUrl
+                            mediumUrl
+                            deleteUrl
+                            createdISO
+                            createdBy {
+                                id
+                            }
+                        }
+                        coverPhoto {
+                            url
+                            id
+                            alt
+                            thumbUrl
+                            mediumUrl
+                            deleteUrl
+                            createdISO
+                            createdBy {
+                                id
+                            }
+                        }
                     }
                 }`
             });
@@ -373,8 +395,22 @@ function expectProductChanges(editProduct, productToChange, expectedValue) {
         stock: productToChange.stock,
         name: productToChange.name,
         alias: productToChange.alias,
-        photosUrl: productToChange.photosUrl,
-        coverPhotoUrl: productToChange.coverPhotoUrl,
+        photos: productToChange.photos ? productToChange.photos.map(({ createdById, ...rest }) => ({
+            ...rest,
+            createdBy: { id: createdById },
+        })) : null,
+        coverPhoto: productToChange.coverPhoto ? {
+            id: productToChange.coverPhoto.id,
+            url: productToChange.coverPhoto.url,
+            alt: productToChange.coverPhoto.alt,
+            thumbUrl: productToChange.coverPhoto.thumbUrl,
+            mediumUrl: productToChange.coverPhoto.mediumUrl,
+            deleteUrl: productToChange.coverPhoto.deleteUrl,
+            createdISO: productToChange.coverPhoto.createdISO,
+            createdBy: {
+                id: productToChange.coverPhoto.createdById
+            }
+        }: null,
         ...expectedValue
     });
 }

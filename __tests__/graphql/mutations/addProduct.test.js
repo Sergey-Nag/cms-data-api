@@ -170,7 +170,10 @@ describe('addProduct mutation', () => {
                     lowStockAlert: 10,
                 },
                 price: 12,
-                coverPhotoUrl: "Some cover photo url"
+                coverPhoto: {
+                    url: "Some cover photo url",
+                    id: 'some-cover-photo-id',
+                }
             }, {
                 name: 'New product with options and characteristics and published and description',
                 description: 'New product with options and characteristics and published and description',
@@ -209,7 +212,15 @@ describe('addProduct mutation', () => {
                     },
                     price: 12
                 }],
-                coverPhotoUrl: "Some cover photo url"
+                coverPhoto: {
+                    url: "Some cover photo url",
+                    id: 'some-cover-photo-id',
+                    alt: null,
+                    thumbUrl: null,
+                    mediumUrl: null,
+                    deleteUrl: null,
+                    createdISO: MOCK_ISO_TIME
+                }
             },
         ],
         [
@@ -219,8 +230,21 @@ describe('addProduct mutation', () => {
                 stock: {
                     amount: 0
                 },
-                photosUrl: [
-                    'photo 1', 'photo 2', 'photo 3', '4', '5'
+                photos: [
+                    {
+                        url: 'photo 1',
+                        id: 'photo-1',
+                    },
+                    {
+                        url: 'photo 2',
+                        id: 'photo-2',
+                    }, {
+                        url: 'photo 3',
+                        id: 'photo-3',
+                        thumbUrl: 'thumbUrl',
+                        mediumUrl: 'mediumUrl',
+                        deleteUrl: 'deleteUrl',
+                    }
                 ]
             },
             {
@@ -230,8 +254,33 @@ describe('addProduct mutation', () => {
                     amount: 0,
                     lowStockAlert: 0
                 },
-                photosUrl: [
-                    'photo 1', 'photo 2', 'photo 3', '4', '5'
+                photos: [
+                    {
+                        url: 'photo 1',
+                        id: 'photo-1',
+                        alt: null,
+                        thumbUrl: null,
+                        mediumUrl: null,
+                        deleteUrl: null,
+                        createdISO: MOCK_ISO_TIME
+                    },
+                    {
+                        url: 'photo 2',
+                        id: 'photo-2',
+                        alt: null,
+                        thumbUrl: null,
+                        mediumUrl: null,
+                        deleteUrl: null,
+                        createdISO: MOCK_ISO_TIME
+                    }, {
+                        url: 'photo 3',
+                        id: 'photo-3',
+                        alt: null,
+                        thumbUrl: 'thumbUrl',
+                        mediumUrl: 'mediumUrl',
+                        deleteUrl: 'deleteUrl',
+                        createdISO: MOCK_ISO_TIME
+                    }
                 ]
             }
         ],
@@ -329,8 +378,24 @@ describe('addProduct mutation', () => {
                             options
                         }
                         createdISO
-                        photosUrl
-                        coverPhotoUrl
+                        photos {
+                            url
+                            id
+                            alt
+                            thumbUrl
+                            mediumUrl
+                            deleteUrl
+                            createdISO
+                        }
+                        coverPhoto {
+                            url
+                            id
+                            alt
+                            thumbUrl
+                            mediumUrl
+                            deleteUrl
+                            createdISO
+                        }
                     }
                 }`
             });
@@ -361,8 +426,8 @@ describe('addProduct mutation', () => {
                     },
                     price: 0
                 }],
-                photosUrl: null,
-                coverPhotoUrl: null,
+                photos: null,
+                coverPhoto: null,
                 ...expectedValue
             });
             expect(mockProducts).toContainEqual(

@@ -7,6 +7,7 @@ const AdminsResolver = require("../user/AdminsResolver");
 const CategoriesResolver = require("../categories/CategoriesResolver");
 const { ProductCategoryType } = require("./sharedTypes");
 const { getSoldProducts } = require("./utils");
+const { ImageContentType } = require("../_sharedTypes/ImageContent");
 
 const adminsResolver = new AdminsResolver();
 
@@ -80,8 +81,8 @@ const ProductType = new GraphQLObjectType({
         stock: { type: GraphQLNonNull(StockType) },
         characteristics: { type: GraphQLList(ProductCharacteristicType) },
         isPublished: { type: GraphQLNonNull(GraphQLBoolean) },
-        coverPhotoUrl: { type: GraphQLString },
-        photosUrl: { type: GraphQLList(GraphQLString) },
+        coverPhoto: { type: ImageContentType },
+        photos: { type: GraphQLList(ImageContentType) },
         createdISO: { type: GraphQLNonNull(GraphQLString) },
         options: { type: GraphQLList(ProductOptionType) },
         sold: {

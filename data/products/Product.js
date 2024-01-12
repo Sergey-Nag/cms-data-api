@@ -9,7 +9,7 @@ const Stock = require("./Stock");
 class Product extends EditableModel {
     constructor({
         name, alias, description, price = 0, priceHistory, 
-        categoriesId, tags, coverPhotoUrl, photosUrl,
+        categoriesId, tags, coverPhoto, photos,
         stock, characteristics, options, isPublished,
         ...data 
     }) {
@@ -26,8 +26,8 @@ class Product extends EditableModel {
         this.characteristics = this.#getCharacteristics(characteristics);
         this.options = this.#getOptions(options);
         this.isPublished = isPublished ?? false;
-        this.coverPhotoUrl = coverPhotoUrl ?? null;
-        this.photosUrl = photosUrl ?? null;
+        this.coverPhoto = coverPhoto ? new ImageContent(coverPhoto) : null;
+        this.photos = photos ? photos.map((photo) => new ImageContent(photo)) : null;
     }
 
     update({
@@ -36,13 +36,13 @@ class Product extends EditableModel {
         description = this.description, 
         categoriesId = this.categoriesId, 
         tags = this.tags, 
-        coverPhotoUrl = this.coverPhotoUrl, 
-        photosUrl = this.photosUrl,
         characteristics = this.characteristics,
         options = this.options,
         isPublished = this.isPublished,
         price,
         stock,
+        coverPhoto,
+        photos,
     }, modifiedById) {
         this.name = name;
         this.alias = alias;
@@ -51,8 +51,6 @@ class Product extends EditableModel {
         this.tags = tags;
         this.characteristics = this.#getCharacteristics(characteristics);
         this.isPublished = isPublished;
-        this.photosUrl = photosUrl;
-        this.coverPhotoUrl = coverPhotoUrl;
         this.options = this.#getOptions(options);
 
         if (stock) {
@@ -62,6 +60,14 @@ class Product extends EditableModel {
         if (price) {
             this.price = price;
             this.priceHistory.push(new PriceHistory(price, modifiedById));
+        }
+
+        if (coverPhoto !== undefined) {
+            this.coverPhoto = coverPhoto && new ImageContent({...coverPhoto, createdById: modifiedById });
+        }
+
+        if (photos !== undefined) {
+            this.photos = photos && photos.map((photo) => new ImageContent({...photo, createdById: modifiedById }));
         }
 
         super.update(modifiedById);

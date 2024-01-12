@@ -1,20 +1,24 @@
-const Content = require("./Content");
+const CreatableModel = require("../baseModels/CreatableModel");
 
-class ImageContent extends Content {
-    constructor({ url = null, alt = null, sizes = null, ...data}) {
+class ImageContent extends CreatableModel {
+    constructor({
+        id, 
+        url = null,
+        alt = null,
+        thumbUrl = null,
+        mediumUrl = null,
+        sizes = null,
+        deleteUrl = null,
+        ...data
+    }) {
         super(data);
 
+        this.id = id;
         this.url = url;
+        this.thumbUrl = thumbUrl;
+        this.mediumUrl = mediumUrl;
+        this.deleteUrl = deleteUrl;
         this.alt = alt;
-        this.sizes = sizes ?? null;
-    }
-
-    update({ url = this.url, alt = this.alt, sizes = this.sizes, ...data} = {}, modifiedById) {
-        this.url = url;
-        this.alt = alt;
-        this.sizes = sizes;
-
-        super.update(data, modifiedById);
     }
 }
 
