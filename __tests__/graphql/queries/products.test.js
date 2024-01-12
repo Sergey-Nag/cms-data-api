@@ -5,7 +5,6 @@ const mockOrders = require('../../__mocks__/orders.json');
 const { readData } = require('../../../data/index.js');
 const server = require('../../../index');
 const supertest = require('supertest');
-const ApiErrorFactory = require('../../../utils/ApiErrorFactory');
 const { GRAPH_ENDPOINT } = require('../../constants');
 const SessionManager = require('../../../managers/SessionManager');
 const { ORDERS_REPO_NAME, ADMINS_REPO_NAME, PRODUCTS_REPO_NAME, CATEGORIES_REPO_NAME } = require('../../../constants/repositoryNames');
@@ -106,8 +105,30 @@ describe('products query', () => {
                             options
                           }
                           isPublished
-                          coverPhotoUrl
-                          photosUrl
+                          coverPhoto {
+                            id
+                            url
+                            alt
+                            thumbUrl
+                            mediumUrl
+                            deleteUrl
+                            createdISO
+                            createdBy {
+                                id
+                            }
+                          }
+                          photos {
+                            id
+                            url
+                            alt
+                            thumbUrl
+                            mediumUrl
+                            deleteUrl
+                            createdISO
+                            createdBy {
+                                id
+                            }
+                          }
                           createdISO
                           lastModifiedISO
                           createdBy {
@@ -135,8 +156,23 @@ describe('products query', () => {
                     id: createdById
                 }
             }));
+            const { createdById: coverCreatedById, ...restCover } = restProd.coverPhoto ?? {}
             return {
                 ...restProd,
+                photos: restProd.photos 
+                    ? restProd.photos.map(({ createdById, ...restPhoto }) => ({
+                        ...restPhoto,
+                        createdBy: {
+                            id: createdById
+                        }
+                    }))
+                    : null,
+                coverPhoto: restProd.coverPhoto && {
+                    ...restCover,
+                    createdBy: {
+                        id: coverCreatedById
+                    }
+                },
                 createdBy: {
                     id: createdById
                 },

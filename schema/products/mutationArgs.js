@@ -1,5 +1,6 @@
 const { GraphQLInputObjectType, GraphQLID, GraphQLString, GraphQLFloat, GraphQLList, GraphQLNonNull, GraphQLBoolean, GraphQLInt } = require("graphql");
 const { CharacteristicInput, ProductOptionInput } = require("./queryArgs");
+const { ImageContentInputType } = require("../_sharedTypes/ImageContent");
 
 const StockInput = new GraphQLInputObjectType({
     name: 'StockInput',
@@ -24,12 +25,12 @@ const EditProductInput = new GraphQLInputObjectType({
         alias: { type: GraphQLString },
         description: { type: GraphQLString },
         price: { type: GraphQLFloat },
-        categoriesId: { type: GraphQLID },
+        categoriesId: { type: GraphQLList(GraphQLID) },
         tags: { type: GraphQLList(GraphQLString) },
         stock: { type: StockEditInput },
         isPublished: { type: GraphQLBoolean },
-        coverPhotoUrl: { type: GraphQLString },
-        photosUrl: { type: GraphQLList(GraphQLString) },
+        coverPhoto: { type: ImageContentInputType },
+        photos: { type: GraphQLList(ImageContentInputType) },
         characteristics: { type: GraphQLList(CharacteristicInput) },
         options: { type: GraphQLList(ProductOptionInput) }
     }
@@ -46,8 +47,8 @@ const NewProductInput = new GraphQLInputObjectType({
         tags: { type: GraphQLList(GraphQLString) },
         stock: { type: GraphQLNonNull(StockInput) },
         isPublished: { type: GraphQLBoolean },
-        coverPhotoUrl: { type: GraphQLString },
-        photosUrl: { type: GraphQLList(GraphQLString) },
+        coverPhoto: { type: ImageContentInputType },
+        photos: { type: GraphQLList(ImageContentInputType) },
         characteristics: { type: GraphQLList(CharacteristicInput) },
         options: { type: GraphQLList(ProductOptionInput) }
     }
