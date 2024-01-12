@@ -1,4 +1,5 @@
 const { NUMBER_SERACH_INPUT_REGEXP } = require("../../../../constants/regexp");
+const BooleanMatcher = require("./BooleanMatcher");
 const Matcher = require("./Matcher");
 const NumberMatcher = require("./NumberMatcher");
 const StringMatcher = require("./StringMatcher");
@@ -11,6 +12,8 @@ class MatcherFactory {
             return new StringMatcher(propertyName, expectedValue, isPartialy);
         } else if (typeof expectedValue === "object" && !Array.isArray(expectedValue) && expectedValue !== null) {
             return new ObjectMatcher(propertyName, expectedValue, isPartialy);
+        } else if (typeof expectedValue === "boolean") {
+            return new BooleanMatcher(propertyName, expectedValue);
         } else if (Array.isArray(expectedValue)) {
             return new ArrayMatcher(propertyName, expectedValue, isPartialy);
         }
@@ -60,7 +63,6 @@ class ArrayMatcher extends ObjectMatcher {
     
     isMatched(item) {
         const itemArray = this.propertyName ? item[this.propertyName] : item;
-        
         const compare = (matcher) => {
             if (matcher.expectedValue[0] === '*') {
                 return itemArray && itemArray.length > 0;

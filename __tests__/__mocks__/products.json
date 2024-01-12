@@ -43,8 +43,8 @@
             }
         ],
         "isPublished": false,
-        "coverPhotoUrl": null,
-        "photosUrl": null
+        "coverPhoto": null,
+        "photos": null
     },
     {
         "id": "PTtest-id-2",
@@ -90,8 +90,17 @@
             }
         ],
         "isPublished": true,
-        "coverPhotoUrl": "http://some.com/photo.png",
-        "photosUrl": null
+        "coverPhoto": {
+            "url": "http://some.com/photo.png",
+            "id": "PTtest-id-2-cover-photo",
+            "createdById": "Atest-id-1",
+            "createdISO": "2024-01-12T10:01:01.651Z",
+            "thumbUrl": null,
+            "mediumUrl": null,
+            "deleteUrl": "http://some.com.com/delete/photo.png",
+            "alt": null
+        },
+        "photos": null
     },
     {
         "id": "PTtest-id-3",
@@ -133,8 +142,8 @@
             }
         ],
         "isPublished": true,
-        "coverPhotoUrl": null,
-        "photosUrl": null
+        "coverPhoto": null,
+        "photos": null
     },
     {
         "id": "PTtest-id-4",
@@ -176,11 +185,47 @@
         ],
         "options": [],
         "isPublished": true,
-        "coverPhotoUrl": "http://some.com/another-cover-photo.png",
-        "photosUrl": [
-            "http://some.com/some-photo-1.png",
-            "http://some.com/some-photo-2.png",
-            "http://some.com/some-photo-3.png"
+        "coverPhoto": {
+            "url": "http://some.com/another-cover-photo.png",
+            "id": "PTtest-id-2-cover-photo",
+            "createdById": "Atest-id-1",
+            "createdISO": "2024-01-12T10:01:01.651Z",
+            "thumbUrl": null,
+            "mediumUrl": null,
+            "deleteUrl": "http://some.com.com/delete/another-cover-photo.png",
+            "alt": null
+        },
+        "photos": [
+            {
+                "url": "http://some.com/some-photo-1.png",
+                "id": "PTtest-id-2-cover-photo",
+                "createdById": "Atest-id-1",
+                "createdISO": "2024-01-12T10:01:01.651Z",
+                "thumbUrl": null,
+                "mediumUrl": null,
+                "deleteUrl": "http://some.com.com/delete/some-photo-1.png",
+                "alt": null
+            },
+            {
+                "url": "http://some.com/some-photo-2.png",
+                "id": "PTtest-id-2-cover-photo",
+                "createdById": "Atest-id-1",
+                "createdISO": "2024-01-12T10:01:01.651Z",
+                "thumbUrl": null,
+                "mediumUrl": null,
+                "deleteUrl": "http://some.com.com/delete/some-photo-2.png",
+                "alt": null
+            },
+            {
+                "url": "http://some.com/some-photo-3.png",
+                "id": "PTtest-id-2-cover-photo",
+                "createdById": "Atest-id-1",
+                "createdISO": "2024-01-12T10:01:01.651Z",
+                "thumbUrl": null,
+                "mediumUrl": null,
+                "deleteUrl": "http://some.com.com/delete/some-photo-3.png",
+                "alt": null
+            }
         ]
     },
     {
@@ -218,9 +263,18 @@
         ],
         "options": [],
         "isPublished": true,
-        "coverPhotoUrl": null,
-        "photosUrl": [
-            "http://some.com/some-photo-5.png"
+        "coverPhoto": null,
+        "photos": [
+            {
+                "url": "http://some.com/some-photo-5.png",
+                "id": "PTtest-id-2-cover-photo",
+                "createdById": "Atest-id-1",
+                "createdISO": "2024-01-12T10:01:01.651Z",
+                "thumbUrl": null,
+                "mediumUrl": null,
+                "deleteUrl": "http://some.com.com/delete/some-photo-5.png",
+                "alt": null
+            }
         ]
     }
 ]
