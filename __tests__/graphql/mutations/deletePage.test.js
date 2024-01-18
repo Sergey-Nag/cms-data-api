@@ -124,4 +124,40 @@ describe('Delete entity mutation (deletePage)', () => {
         
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });
+
+    it('Should delete multiple pages by user that has access and return them', async () => {
+        const deletePages = [mockPages[0], mockPages[1]];
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
+            .send({
+                query: `mutation {
+                    deletePages(
+                        ids: ["${deletePages[0].id}", "${deletePages[1].id}"]
+                    ) {
+                        id
+                        path
+                        alias
+                        title
+                        createdISO
+                        lastModifiedISO
+                        createdBy {
+                            id
+                        }
+                        modifiedBy {
+                            id
+                        }
+                    }
+                }`
+            });
+
+        expect(response.body.errors).toBeUndefined();
+        expect(response.body.data.deletePages).toBeDefined();
+
+        response.body.data.deletePages.forEach((deletedPage, index) => {
+            expectPageData(deletedPage, deletePages[index]);
+        });
+        expect(mockPages).not.toContainEqual(deletePages[0]);
+        expect(mockPages).not.toContainEqual(deletePages[1]);
+        expect(mockWriteDataFn).toHaveBeenCalledWith(PAGES_REPO_NAME, mockPages);
+    });
 });

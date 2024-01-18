@@ -188,4 +188,72 @@ describe('Delete entity mutation (deleteAdmin)', () => {
         
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });
+
+    it('Should delete multiple admins', async () => {
+        const deleteAdmin = {...mockAdmins.at(-1)};
+        const deleteAdmin2 = {...mockAdmins.at(-2)};
+        const response = await supertest(server).post(GRAPH_ENDPOINT)
+            .set('Authorization', `Bearer ${userWithAccessToken}`)
+            .send({
+                query: `mutation {
+                    deleteAdmins(
+                        ids: ["${deleteAdmin.id}", "${deleteAdmin2.id}"]
+                    ) {
+                        id
+                        firstname
+                        lastname
+                        email
+                        isOnline
+                        createdISO
+                        lastModifiedISO
+                        permissions {
+                            canSee {
+                                analytics
+                                products
+                                orders
+                                pages
+                                admins
+                                customers
+                            }
+                            canEdit {
+                                analytics
+                                products
+                                orders
+                                pages
+                                admins
+                                customers
+                            }
+                            canDelete {
+                                analytics
+                                products
+                                orders
+                                pages
+                                admins
+                                customers
+                            }
+                        }
+                        createdBy {
+                            id
+                        }
+                    }
+                }`
+            });
+
+        expect(response.body.errors).toBeUndefined();
+        expect(response.body.data.deleteAdmins).toBeDefined();
+
+        expectUserData(response.body.data.deleteAdmins[0], deleteAdmin);
+        expectUserData(response.body.data.deleteAdmins[1], deleteAdmin2);
+        expect(mockAdmins).not.toContainEqual(
+            expect.objectContaining({
+                id: deleteAdmin.id
+            })
+        );
+        expect(mockAdmins).not.toContainEqual(
+            expect.objectContaining({
+                id: deleteAdmin2.id
+            })
+        );
+        expect(mockWriteDataFn).toHaveBeenCalledWith(ADMINS_REPO_NAME, mockAdmins);
+    });
 });
