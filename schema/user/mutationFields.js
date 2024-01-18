@@ -1,4 +1,4 @@
-const { GraphQLString, GraphQLNonNull, GraphQLID } = require('graphql');
+const { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLList } = require('graphql');
 const { AdminType, CustomerType } = require('./type');
 const { authProtect, canEditProtect, canDeleteProtect } = require('../utils');
 const { addAdminProtect, editAdminProtect, addCustomerProtect, editCustomerProtect } = require('./mutationProtections');
@@ -25,8 +25,7 @@ module.exports = {
                     adminsResolver.add.bind(adminsResolver)
                 )
             )
-        ) 
-        // resolve: authProtect(addAdminProtect(UserResolver.add)),
+        )
     },
     editAdmin: {
         type: AdminType,
@@ -44,12 +43,11 @@ module.exports = {
                 )
             )
         )
-        // resolve: authProtect(editAdminProtect(UserResolver.edit)),
     },
-    deleteAdmin: {
-        type: AdminType,
+    deleteAdmins: {
+        type: GraphQLList(AdminType),
         args: {
-            id: { type: new GraphQLNonNull(GraphQLID) },
+            ids: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
         },
         resolve: authProtect(
             canDeleteProtect(
@@ -57,7 +55,6 @@ module.exports = {
                 adminsResolver.delete.bind(adminsResolver)
             )
         )
-        // resolve: authProtect(UserResolver.delete),
     },
     addCustomer: {
         type: CustomerType,
@@ -71,7 +68,6 @@ module.exports = {
                 customersResolver.add.bind(customersResolver)
             )
         )
-        // resolve: authProtect(addAdminProtect(UserResolver.add)),
     },
     editCustomer: {
         type: CustomerType,
@@ -87,10 +83,10 @@ module.exports = {
             )
         )
     },
-    deleteCustomer: {
-        type: CustomerType,
+    deleteCustomers: {
+        type: GraphQLList(CustomerType),
         args: {
-            id: { type: GraphQLNonNull(GraphQLID) },
+            ids: { type: GraphQLNonNull(GraphQLList(GraphQLID)) },
         },
         resolve: canDeleteProtect('customers', 
             customersResolver.delete.bind(customersResolver),

@@ -78,17 +78,21 @@ class DataResolver {
         return updateData;
     }
 
-    async delete(parent, { id } = {}, context) {
+    async delete(parent, { ids } = {}, context) {
         await this.repository.load();
 
-        const result = this.repository.delete(id);
+        const deletedData = ids.map((id) => {
+            const result = this.repository.delete(id);
 
-        if (!result) {
-            this.validator?.dataNotFound();
-        }
+            if (!result) {
+                this.validator?.dataNotFound();
+            }
+
+            return new this.model(result[0]);
+        });
 
         await this.repository.save();
-        return new this.model(result[0]);
+        return deletedData;
     }
 }
 

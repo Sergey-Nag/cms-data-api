@@ -55,8 +55,8 @@ describe('Delete entity mutation (deletePage)', () => {
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
-                    deletePage(
-                        id: "${deletePage.id}"
+                    deletePages(
+                        ids: ["${deletePage.id}"]
                     ) {
                         id
                         path
@@ -75,9 +75,9 @@ describe('Delete entity mutation (deletePage)', () => {
             });
 
         expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.deletePage).toBeDefined();
+        expect(response.body.data.deletePages).toBeDefined();
 
-        expectPageData(response.body.data.deletePage, deletePage);
+        expectPageData(response.body.data.deletePages[0], deletePage);
         expect(mockPages).not.toContainEqual(deletePage);
         expect(mockWriteDataFn).toHaveBeenCalledWith(PAGES_REPO_NAME, mockPages);
     });
@@ -89,15 +89,15 @@ describe('Delete entity mutation (deletePage)', () => {
             .set('Authorization', `Bearer ${userWithoutAccessToken}`)
             .send({
                 query: `mutation {
-                    deletePage(
-                        id: "${notDeletedPage.id}"
+                    deletePages(
+                        ids: ["${notDeletedPage.id}"]
                     ) {
                         id
                     }
                 }`
             });
 
-        expect(response.body.data.deletePage).toBeNull();
+        expect(response.body.data.deletePages).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.actionForbidden().message);
         
@@ -110,15 +110,15 @@ describe('Delete entity mutation (deletePage)', () => {
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
-                    deletePage(
-                        id: "not-existed-page-id"
+                    deletePages(
+                        ids: ["not-existed-page-id"]
                     ) {
                         id
                     }
                 }`
             });
 
-        expect(response.body.data.deletePage).toBeNull();
+        expect(response.body.data.deletePages).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.pageNotFound().message);
         

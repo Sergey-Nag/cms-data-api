@@ -1,4 +1,4 @@
-const { GraphQLString, GraphQLNonNull, GraphQLList, GraphQLInputObjectType, GraphQLID } = require('graphql');
+const { GraphQLNonNull, GraphQLList, GraphQLID } = require('graphql');
 const {PageType} = require('./type');
 const PagesResolver = require('./PagesResolver');
 const { authProtect, canEditProtect, canDeleteProtect } = require('../utils');
@@ -42,10 +42,10 @@ module.exports = {
             )
         ) 
     },
-    deletePage: {
-        type: PageType,
+    deletePages: {
+        type: GraphQLList(PageType),
         args: {
-            id: { type: new GraphQLNonNull(GraphQLID) },
+            ids: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
         },
         resolve: authProtect(
             canDeleteProtect(

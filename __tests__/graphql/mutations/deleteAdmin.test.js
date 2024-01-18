@@ -54,8 +54,8 @@ describe('Delete entity mutation (deleteAdmin)', () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
                 query: `mutation {
-                    deleteAdmin(
-                        id: "${deleteUser.id}"
+                    deleteAdmins(
+                        ids: "${deleteUser.id}"
                     ) {
                         id
                     }
@@ -63,7 +63,7 @@ describe('Delete entity mutation (deleteAdmin)', () => {
             });
 
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.unauthorized().message);
-        expect(response.body.data.deleteAdmin).toBeNull();
+        expect(response.body.data.deleteAdmins).toBeNull();
     });
 
     it('Should delete user and credentials by user that has access and return it', async () => {
@@ -72,8 +72,8 @@ describe('Delete entity mutation (deleteAdmin)', () => {
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
-                    deleteAdmin(
-                        id: "${deleteUser.id}"
+                    deleteAdmins(
+                        ids: ["${deleteUser.id}"]
                     ) {
                         id
                         firstname
@@ -116,9 +116,9 @@ describe('Delete entity mutation (deleteAdmin)', () => {
             });
 
         expect(response.body.errors).toBeUndefined();
-        expect(response.body.data.deleteAdmin).toBeDefined();
+        expect(response.body.data.deleteAdmins).toBeDefined();
 
-        expectUserData(response.body.data.deleteAdmin, deleteUser);
+        expectUserData(response.body.data.deleteAdmins[0], deleteUser);
         expect(mockAdmins).not.toContainEqual(
             expect.objectContaining({
                 id: deleteUser.id
@@ -133,15 +133,15 @@ describe('Delete entity mutation (deleteAdmin)', () => {
             .set('Authorization', `Bearer ${userWithoutAccessToken}`)
             .send({
                 query: `mutation {
-                    deleteAdmin(
-                        id: "${notDeletedUser.id}"
+                    deleteAdmins(
+                        ids: ["${notDeletedUser.id}"]
                     ) {
                         id
                     }
                 }`
             });
 
-        expect(response.body.data.deleteAdmin).toBeNull();
+        expect(response.body.data.deleteAdmins).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.actionForbidden().message);
         
@@ -154,15 +154,15 @@ describe('Delete entity mutation (deleteAdmin)', () => {
             .set('Authorization', `Bearer ${userWithAccessToken}`)
             .send({
                 query: `mutation {
-                    deleteAdmin(
-                        id: "not-existed-user-id"
+                    deleteAdmins(
+                        ids: ["not-existed-user-id"]
                     ) {
                         id
                     }
                 }`
             });
 
-        expect(response.body.data.deleteAdmin).toBeNull();
+        expect(response.body.data.deleteAdmins).toBeNull();
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.userNotFound().message);
         
@@ -174,8 +174,8 @@ describe('Delete entity mutation (deleteAdmin)', () => {
             .set('Authorization', `Bearer some-not-existed-token`)
             .send({
                 query: `mutation {
-                    deleteAdmin(
-                        id: "${mockAdmins[2].id}"
+                    deleteAdmins(
+                        ids: ["${mockAdmins[2].id}"]
                     ) {
                         id
                     }
@@ -184,7 +184,7 @@ describe('Delete entity mutation (deleteAdmin)', () => {
 
         expect(response.body.errors).toBeDefined();
         expect(response.body.errors[0].message).toBe(ApiErrorFactory.unauthorized().message);
-        expect(response.body.data?.deleteUser).toBeUndefined();
+        expect(response.body.data?.deleteAdmins).toBeUndefined();
         
         expect(mockWriteDataFn).not.toHaveBeenCalled();
     });

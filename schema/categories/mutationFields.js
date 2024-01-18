@@ -1,4 +1,4 @@
-const { GraphQLNonNull, GraphQLID } = require('graphql');
+const { GraphQLNonNull, GraphQLID, GraphQLList } = require('graphql');
 const CategoriesResolver = require('./CategoriesResolver');
 const { PaginatedCategoriesType, categoriesArgs } = require('./queryArgs');
 const { CategoryType } = require('./type');
@@ -28,10 +28,10 @@ module.exports = {
             categoriesResolver.edit.bind(categoriesResolver)
         )
     },
-    deleteCategory: {
-        type: CategoryType,
+    deleteCategories: {
+        type: GraphQLList(CategoryType),
         args: {
-            id: { type: GraphQLNonNull(GraphQLID) },
+            ids: { type: GraphQLNonNull(GraphQLList(GraphQLID)) },
         },
         resolve: canDeleteProtect('products', 
             categoriesResolver.delete.bind(categoriesResolver)

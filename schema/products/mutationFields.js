@@ -1,4 +1,4 @@
-const { GraphQLNonNull, GraphQLID } = require('graphql');
+const { GraphQLNonNull, GraphQLID, GraphQLList } = require('graphql');
 const ProductsResolver = require('./ProductsResolver');
 const { NewProductInput, EditProductInput } = require('./mutationArgs');
 const { ProductType } = require('./type');
@@ -36,15 +36,16 @@ module.exports = {
             )
         )
     },
-    deleteProduct: {
-        type: ProductType,
+    deleteProducts: {
+        type: GraphQLList(ProductType),
         args: {
-            id: { type: GraphQLNonNull(GraphQLID) },
+            ids: { type: GraphQLNonNull(GraphQLList(GraphQLID)) },
         },
-        resolve: authProtect(
-            canDeleteProtect('products', 
-                productsResolver.delete.bind(productsResolver)
+        resolve:
+            authProtect(
+                canDeleteProtect('products',
+                    productsResolver.delete.bind(productsResolver)
+                )
             )
-        )
     }
 };
