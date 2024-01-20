@@ -33,6 +33,7 @@ const ProductFilterInput = new GraphQLInputObjectType({
     name: 'ProductFilter',
     fields: {
         id: { type: GraphQLID },
+        ids: { type: GraphQLList(GraphQLID) },
         name: { type: GraphQLString },
         alias: { type: GraphQLString },
         description: { type: GraphQLString },

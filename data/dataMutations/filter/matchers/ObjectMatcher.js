@@ -1,25 +1,34 @@
 const { NUMBER_SERACH_INPUT_REGEXP } = require("../../../../constants/regexp");
 const BooleanMatcher = require("./BooleanMatcher");
+const IdMatcher = require("./IDMatcher");
 const Matcher = require("./Matcher");
 const NumberMatcher = require("./NumberMatcher");
 const StringMatcher = require("./StringMatcher");
 
 class MatcherFactory {
     static createMatcher(propertyName, expectedValue, isPartialy) {
+        if (propertyName === 'id' || propertyName === 'ids') {
+            return new IdMatcher(propertyName, expectedValue);
+        }
         if (this.isNumericValue(expectedValue)) {
             return new NumberMatcher(propertyName, expectedValue);
-        } else if (typeof expectedValue === "string") {
+        }
+        if (typeof expectedValue === "string") {
             return new StringMatcher(propertyName, expectedValue, isPartialy);
-        } else if (typeof expectedValue === "object" && !Array.isArray(expectedValue) && expectedValue !== null) {
+        }
+        if (typeof expectedValue === "object" && !Array.isArray(expectedValue) && expectedValue !== null) {
             return new ObjectMatcher(propertyName, expectedValue, isPartialy);
-        } else if (typeof expectedValue === "boolean") {
+        }
+        if (typeof expectedValue === "boolean") {
             return new BooleanMatcher(propertyName, expectedValue);
-        } else if (Array.isArray(expectedValue)) {
+        }
+        if (Array.isArray(expectedValue)) {
             return new ArrayMatcher(propertyName, expectedValue, isPartialy);
         }
+
         return new Matcher(propertyName, expectedValue);
     }
-    
+
     static isNumericValue(expectedValue) {
         return typeof expectedValue === "number" ||
             typeof expectedValue === 'string' && NUMBER_SERACH_INPUT_REGEXP.test(expectedValue);
@@ -60,7 +69,7 @@ class ArrayMatcher extends ObjectMatcher {
             return MatcherFactory.createMatcher(null, value, false);
         });
     }
-    
+
     isMatched(item) {
         const itemArray = this.propertyName ? item[this.propertyName] : item;
         const compare = (matcher) => {
