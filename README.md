@@ -5,7 +5,7 @@
   - http://localhost:4000/api-docs - REST API Swagger documentation
 
 ## Other commands
-- `npm run dev`: Starts the data server in development mode with automatic server restart (It clears all essions! You must re-authorize).
+- `npm run dev`: Starts the data server in development mode with automatic server restart (It clears all sessions! You must re-authorize).
 - `npm test`: Runs tests for the API calls.
 - `npm run test:watch`: Runs tests in watch mode.
 
