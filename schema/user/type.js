@@ -1,4 +1,4 @@
-const { GraphQLObjectType, GraphQLString, GraphQLBoolean, GraphQLEnumType, GraphQLInputObjectType, GraphQLID, GraphQLList, GraphQLFloat } = require('graphql');
+const { GraphQLObjectType, GraphQLString, GraphQLBoolean, GraphQLEnumType, GraphQLInputObjectType, GraphQLID, GraphQLList, GraphQLFloat, GraphQLNonNull } = require('graphql');
 const { DEFAULT_PERMISSIONS } = require('../../constants/defaults');
 const AdminsResolver = require('./AdminsResolver');
 const OrdersResolver = require('../orders/OrdersResolver');
@@ -100,12 +100,13 @@ const CustomerType = new GraphQLObjectType({
     name: 'Customer',
     interfaces: [UserInterface],
     fields: () => ({
-        id: { type: GraphQLID },
+        id: { type: GraphQLNonNull(GraphQLID) },
+        ip: { type: GraphQLString },
         firstname: { type: GraphQLString },
         lastname: { type: GraphQLString },
         email: { type: GraphQLString },
         phone: { type: GraphQLString },
-        orders: { 
+        orders: {
             type: GraphQLList(CustomerOrderType),
             resolve: canSeeProtect('orders',  async ({ id }) => {
                 const result = await ordersResolver.getAll(null, {

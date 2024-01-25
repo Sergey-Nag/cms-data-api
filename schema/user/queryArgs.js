@@ -40,13 +40,13 @@ const CustomerFilterInput = new GraphQLInputObjectType({
     name: 'CustomerFilter',
     fields: {
         id: { type: GraphQLID },
+        ip: { type: GraphQLString },
         firstname: { type: GraphQLString },
         lastname: { type: GraphQLString },
         email: { type: GraphQLString },
         phone: { type: GraphQLString },
     }
 });
-
 
 const PaginatedAdminsType = new GraphQLObjectType({
     name: 'PaginatedAdmins',
