@@ -33,7 +33,7 @@ const AdminType = new GraphQLObjectType({
     name: 'Admin',
     interfaces: [UserInterface, CreatableModelInterface, EditableModelInterface],
     fields: () => ({
-        id: { type: GraphQLID },
+        id: { type: GraphQLNonNull(GraphQLID) },
         firstname: { type: GraphQLString },
         lastname: { type: GraphQLString },
         email: { type: GraphQLString },
