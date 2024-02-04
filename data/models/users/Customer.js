@@ -8,8 +8,8 @@ class Customer extends User {
     }
 
     update({phone, ip, ...data}) {
-        this.phone = phone;
-        this.ip = ip;
+        this.phone = phone ?? this.phone;
+        this.ip = ip ?? this.ip;
 
         super.update(data);
     }

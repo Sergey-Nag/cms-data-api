@@ -6,7 +6,6 @@ const OrderValidator = require("../../data/validators/OrderValidator");
 const DataResolver = require("../DataResolver");
 const CustomersResolver = require("../user/CustomersResolver");
 const { getPriceFromProducts, getCurrentStatus } = require("../utils");
-const { addCustomerProtect } = require("../user/mutationProtections");
 const ApiErrorFactory = require("../../utils/ApiErrorFactory");
 
 class OrdersResolver extends DataResolver {
@@ -69,11 +68,18 @@ class OrdersResolver extends DataResolver {
     }
 
     async #mutateCustomerInput(parent, input, context) {
-        const protectedCustomerAdd = addCustomerProtect(async (parent, { input: customerInput }) => {
-            return await this.customersResolver.add(null, { input: customerInput }, context);
-        });
-        const customer = await protectedCustomerAdd(parent, { input: input.customer }, context);
-        input.customerId = customer.id;
+        const { email } = input.customer;
+        let customerId = null;
+        try {
+            const customer = await this.customersResolver.get(null, { find: { email } }, context);
+            await this.customersResolver.edit(null, { id: customer.id, input: input.customer }, context);
+            customerId = customer.id;
+        } catch (error) {
+            const customer = await this.customersResolver.add(null, { input: input.customer }, context);
+            customerId = customer.id;
+        }
+
+        input.customerId = customerId;
     }
 
     #mutateOrdersFilter(filter) {

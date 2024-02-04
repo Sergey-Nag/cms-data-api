@@ -233,28 +233,6 @@ describe('addOrder mutation', () => {
         }
     });
 
-    it('Should get error when creating new customer with existing email', async () => {
-        const response = await supertest(server).post(GRAPH_ENDPOINT)
-            .send({
-                query: `mutation {
-                    addOrder(
-                        input: {
-                            orderProducts: []
-                            customer: {
-                                email: "${mockCustomers[0].email}"
-                                firstname: "New name"
-                            }
-                        }
-                    ) {
-                        id
-                    }
-                }`
-            });
-
-        expect(response.body.data.addOrder).toBeNull();
-        expect(response.body.errors[0].message).toBe(ApiErrorFactory.userAlreadyExists('email').message);
-    });
-
     it('Should get error when orderProducts is empty', async () => {
         const response = await supertest(server).post(GRAPH_ENDPOINT)
             .send({
